@@ -33,6 +33,7 @@ function Database:Initialize(saved)
         lowMinutes = clamp(saved.lowMinutes, ns.Ranges.lowMinutes, defaults.lowMinutes),
         lowCharges = clamp(saved.lowCharges, ns.Ranges.lowCharges, defaults.lowCharges),
         scale = clamp(saved.scale, ns.Ranges.scale, defaults.scale),
+        textSize = clamp(saved.textSize, ns.Ranges.textSize, defaults.textSize),
         orientation = saved.orientation == "VERTICAL" and "VERTICAL" or "HORIZONTAL",
         showMinimap = saved.showMinimap ~= false,
         minimapAngle = math.max(0, math.min(359, tonumber(saved.minimapAngle) or defaults.minimapAngle)),
@@ -62,6 +63,8 @@ function Database:Set(key, value)
         value = clamp(value, ns.Ranges.lowCharges, ns.Defaults.lowCharges)
     elseif key == "scale" then
         value = clamp(value, ns.Ranges.scale, ns.Defaults.scale)
+    elseif key == "textSize" then
+        value = clamp(value, ns.Ranges.textSize, ns.Defaults.textSize)
     elseif key == "orientation" then
         value = value == "VERTICAL" and "VERTICAL" or "HORIZONTAL"
     elseif key == "showMinimap" then

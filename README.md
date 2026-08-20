@@ -10,7 +10,7 @@ It keeps everything on two buttons:
 
 - the left button represents the main-hand weapon;
 - the right button represents the off-hand weapon;
-- remaining enchant time and charges appear directly on each button;
+- weapon labels and charges appear above each button, with remaining time below;
 - an orange border means the poison is running low;
 - a red border means the weapon has no temporary enchant;
 - left, right, and middle click apply three configurable poison families.
@@ -37,9 +37,10 @@ untouched.
 
 ## Status
 
-This is an alpha build. Static Lua and data tests cover the local project, but
-actual poison application, temporary-enchant identification, combat behavior,
-and final geometry require a live Classic Era/Hardcore client check.
+SimplePoisons 0.1.0 is the first stable Classic Era and Hardcore release.
+Automated Lua and data tests cover the packaged project. Protected clicks,
+temporary-enchant identification, combat behavior, and final geometry still
+depend on the live WoW client.
 
 Support for TBC and other WoW versions is planned for later releases after
 separate client-specific implementation and verification.

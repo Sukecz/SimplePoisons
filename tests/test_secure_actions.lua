@@ -15,6 +15,7 @@ local button = {
     SetAttribute = function(_, key, value) attributes[key] = value end,
 }
 ns.SecureActions:ConfigureButton(button)
+assert(attributes.useOnKeyDown == false)
 assert(attributes.type1 == "macro")
 assert(attributes.macrotext1 == "/use item:6947\n/use 17")
 assert(attributes.type2 == nil and attributes.macrotext2 == nil)

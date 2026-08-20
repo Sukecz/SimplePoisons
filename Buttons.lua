@@ -4,6 +4,15 @@ local Buttons = {}
 ns.Buttons = Buttons
 
 local C = ns.Constants
+local TEXT_COLOR = { 1, 0.82, 0 }
+
+local function applyFontStyle(fontString, size)
+    local font, _, flags = fontString:GetFont()
+    if font then
+        fontString:SetFont(font, size, flags)
+    end
+    fontString:SetTextColor(unpack(TEXT_COLOR))
+end
 
 local function setBackdrop(frame, borderColor, backgroundColor)
     if type(frame.SetBackdrop) ~= "function" then
@@ -47,16 +56,15 @@ function Buttons:CreateButton(name, slotID, slotLabel)
     button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 
     button.slotText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    button.slotText:SetPoint("TOPLEFT", 5, -4)
+    button.slotText:SetPoint("BOTTOMLEFT", button, "TOPLEFT", 2, 2)
     button.slotText:SetText(slotLabel)
-    button.slotText:SetTextColor(1, 0.82, 0)
 
-    button.chargeText = button:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
-    button.chargeText:SetPoint("TOPRIGHT", -5, -4)
+    button.chargeText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    button.chargeText:SetPoint("BOTTOMRIGHT", button, "TOPRIGHT", -2, 2)
     button.chargeText:SetJustifyH("RIGHT")
 
     button.timeText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    button.timeText:SetPoint("BOTTOM", 0, 5)
+    button.timeText:SetPoint("TOP", button, "BOTTOM", 0, -2)
     button.timeText:SetShadowOffset(1, -1)
 
     button.missingText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -121,8 +129,15 @@ function Buttons:Create()
         if GameTooltip then GameTooltip:Hide() end
     end)
 
-    self.moveHandle = CreateFrame("Button", nil, self.anchor, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    self.moveHandle:SetAllPoints(self.anchor)
+    self.moveControls = CreateFrame("Frame", nil, self.anchor)
+    self.moveControls:SetSize(150, 24)
+    self.moveControls:SetPoint("TOP", self.anchor, "BOTTOM", 0, -21)
+    self.moveControls:SetFrameStrata("HIGH")
+
+    self.moveHandle = CreateFrame("Button", nil, self.moveControls,
+        BackdropTemplateMixin and "BackdropTemplate" or nil)
+    self.moveHandle:SetSize(96, 24)
+    self.moveHandle:SetPoint("LEFT")
     self.moveHandle:RegisterForDrag("LeftButton")
     self.moveHandle:EnableMouse(true)
     setBackdrop(self.moveHandle, { 1, 0.82, 0, 1 }, { 0.05, 0.05, 0.05, 0.78 })
@@ -138,9 +153,20 @@ function Buttons:Create()
         Buttons.anchor:StopMovingOrSizing()
         ns.Database:SavePosition(Buttons.anchor)
     end)
-    self.moveHandle:Hide()
+
+    self.lockButton = CreateFrame("Button", nil, self.moveControls, "UIPanelButtonTemplate")
+    self.lockButton:SetSize(50, 24)
+    self.lockButton:SetPoint("LEFT", self.moveHandle, "RIGHT", 4, 0)
+    self.lockButton:SetText(ns.L.LOCK_SHORT)
+    self.lockButton:SetScript("OnClick", function()
+        if Buttons:SetUnlocked(false) then
+            ns.Options:Open()
+        end
+    end)
+    self.moveControls:Hide()
 
     self:ApplyLayout()
+    self:ApplyTextStyle()
     self:ApplyPosition()
     self:SetUnlocked(false)
     self:Refresh()
@@ -153,22 +179,37 @@ function Buttons:ApplyLayout()
     end
     local size = C.BUTTON_SIZE
     local gap = C.BUTTON_GAP
+    local textSize = ns.Database:Get("textSize")
     self.mainButton:ClearAllPoints()
     self.offButton:ClearAllPoints()
+    self.moveControls:ClearAllPoints()
+    self.moveControls:SetPoint("TOP", self.anchor, "BOTTOM", 0, -(textSize + 8))
+    self.settingsButton:ClearAllPoints()
+    self.settingsButton:SetPoint("LEFT", self.anchor, "RIGHT", 4, 0)
     if ns.Database:Get("orientation") == "VERTICAL" then
-        self.anchor:SetSize(size, (size * 2) + gap)
+        local verticalGap = (textSize * 2) + 7
+        self.anchor:SetSize(size, (size * 2) + verticalGap)
         self.mainButton:SetPoint("TOP", self.anchor, "TOP")
-        self.offButton:SetPoint("TOP", self.mainButton, "BOTTOM", 0, -gap)
-        self.settingsButton:ClearAllPoints()
-        self.settingsButton:SetPoint("BOTTOMLEFT", self.mainButton, "TOPRIGHT", -2, -2)
+        self.offButton:SetPoint("TOP", self.mainButton, "BOTTOM", 0, -verticalGap)
     else
         self.anchor:SetSize((size * 2) + gap, size)
         self.mainButton:SetPoint("LEFT", self.anchor, "LEFT")
         self.offButton:SetPoint("LEFT", self.mainButton, "RIGHT", gap, 0)
-        self.settingsButton:ClearAllPoints()
-        self.settingsButton:SetPoint("BOTTOMLEFT", self.offButton, "TOPRIGHT", -2, -2)
     end
     self.anchor:SetScale(ns.Database:Get("scale"))
+end
+
+function Buttons:ApplyTextStyle()
+    if not self.mainButton then
+        return
+    end
+    local size = ns.Database:Get("textSize")
+    for _, button in ipairs({ self.mainButton, self.offButton }) do
+        applyFontStyle(button.slotText, size)
+        applyFontStyle(button.chargeText, size)
+        applyFontStyle(button.timeText, size)
+    end
+    self:ApplyLayout()
 end
 
 function Buttons:ApplyPosition()
@@ -184,9 +225,9 @@ function Buttons:SetUnlocked(unlocked)
     end
     self.unlocked = unlocked and true or false
     if self.unlocked then
-        self.moveHandle:Show()
+        self.moveControls:Show()
     else
-        self.moveHandle:Hide()
+        self.moveControls:Hide()
         ns.Database:SavePosition(self.anchor)
     end
     return true

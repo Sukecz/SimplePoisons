@@ -127,17 +127,29 @@ function Options:Create()
         return self.frame
     end
     local frame = createBackdropFrame("Frame", "SimplePoisonsOptions", UIParent)
-    frame:SetSize(560, 640)
+    frame:SetSize(560, 740)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
+    frame:SetMovable(true)
     frame:EnableMouse(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
+    frame:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+    end)
     setPanelBackdrop(frame, 0.97)
 
     frame.logo = frame:CreateTexture(nil, "ARTWORK")
     frame.logo:SetSize(300, 169)
     frame.logo:SetPoint("TOP", 0, -7)
     frame.logo:SetTexture("Interface\\AddOns\\SimplePoisons\\assets\\logo-wide-ui.tga")
+
+    frame.closeTop = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    frame.closeTop:SetPoint("TOPRIGHT", -4, -4)
+    frame.closeTop:SetScript("OnClick", function() frame:Hide() end)
 
     createSection(frame, ns.L.CLICK_ASSIGNMENTS, -175)
     local poisonOptions = ns.PoisonData:GetOptions()
@@ -173,16 +185,28 @@ function Options:Create()
         ns.Buttons:ApplyLayout()
     end)
 
-    frame.scale = createSlider(frame, "SimplePoisonsScale", ns.L.SCALE, -510,
+    frame.scale = createSlider(frame, "SimplePoisonsScale", ns.L.SCALE, -558,
         ns.Ranges.scale.min, ns.Ranges.scale.max, 0.1,
         function() return ns.Database:Get("scale") end,
         function(value) ns.Database:Set("scale", value) end,
         function(value) return string.format("%.1fx", value) end)
-    frame.scale:ClearAllPoints()
-    frame.scale:SetPoint("TOPLEFT", 285, -507)
-    frame.scale:SetWidth(170)
 
-    frame.showMinimap = createCheckButton(frame, ns.L.SHOW_MINIMAP, -552,
+    frame.textSize = createSlider(frame, "SimplePoisonsTextSize", ns.L.TEXT_SIZE, -613,
+        ns.Ranges.textSize.min, ns.Ranges.textSize.max, 1,
+        function() return ns.Database:Get("textSize") end,
+        function(value) ns.Database:Set("textSize", value) end,
+        function(value) return tostring(math.floor(value)) end)
+    frame.textSize:SetScript("OnValueChanged", function(self, value)
+        value = math.floor(value + 0.5)
+        _G.SimplePoisonsTextSizeText:SetText(ns.L.TEXT_SIZE .. ": " .. value)
+        if not self.refreshing then
+            ns.Database:Set("textSize", value)
+            ns.Buttons:ApplyTextStyle()
+            ns.Buttons:Refresh()
+        end
+    end)
+
+    frame.showMinimap = createCheckButton(frame, ns.L.SHOW_MINIMAP, -660,
         function() return ns.Database:Get("showMinimap") end,
         function(value)
             ns.Database:Set("showMinimap", value)
@@ -197,6 +221,10 @@ function Options:Create()
         local unlock = not ns.Buttons.unlocked
         if ns.Buttons:SetUnlocked(unlock) then
             frame.move:SetText(unlock and ns.L.LOCK or ns.L.UNLOCK)
+            if unlock then
+                frame.keepButtonsUnlocked = true
+                frame:Hide()
+            end
         end
     end)
 
@@ -219,6 +247,10 @@ function Options:Create()
     frame.close:SetText(ns.L.CLOSE)
     frame.close:SetScript("OnClick", function() frame:Hide() end)
     frame:SetScript("OnHide", function()
+        if frame.keepButtonsUnlocked then
+            frame.keepButtonsUnlocked = nil
+            return
+        end
         if ns.Buttons.unlocked then
             ns.Buttons:SetUnlocked(false)
         end
@@ -240,6 +272,7 @@ function Options:Refresh()
     self.frame.lowCharges:Refresh()
     self.frame.orientation:Refresh()
     self.frame.scale:Refresh()
+    self.frame.textSize:Refresh()
     self.frame.showMinimap:Refresh()
     self.frame.move:SetText(ns.Buttons.unlocked and ns.L.LOCK or ns.L.UNLOCK)
 end

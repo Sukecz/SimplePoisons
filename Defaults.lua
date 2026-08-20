@@ -1,7 +1,7 @@
 local addonName, ns = ...
 
 ns.Constants = {
-    SCHEMA_VERSION = 1,
+    SCHEMA_VERSION = 2,
     MAIN_HAND_SLOT = 16,
     OFF_HAND_SLOT = 17,
     BUTTON_SIZE = 48,
@@ -21,6 +21,7 @@ ns.Defaults = {
     lowMinutes = 3,
     lowCharges = 10,
     scale = 1.0,
+    textSize = 13,
     orientation = "HORIZONTAL",
     showMinimap = true,
     minimapAngle = 225,
@@ -36,4 +37,5 @@ ns.Ranges = {
     lowMinutes = { min = 1, max = 30 },
     lowCharges = { min = 1, max = 60 },
     scale = { min = 0.6, max = 1.6 },
+    textSize = { min = 9, max = 18 },
 }

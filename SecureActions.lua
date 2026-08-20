@@ -24,6 +24,7 @@ function SecureActions:ConfigureButton(button)
         return
     end
 
+    button:SetAttribute("useOnKeyDown", false)
     for mouseButton, suffix in pairs(ATTRIBUTE_INDEX) do
         local familyKey = ns.Database:GetClick(mouseButton)
         local itemID = ns.PoisonData:GetAvailableItem(familyKey)
