@@ -1,0 +1,17 @@
+package-as: SimplePoisons
+manual-changelog: CHANGELOG.md
+
+ignore:
+  - .git
+  - .github
+  - .gitignore
+  - .release
+  - AGENTS.md
+  - COMPATIBILITY.md
+  - CURSEFORGE_DESCRIPTION.md
+  - tests
+  - tools
+  - assets/minimap-icon.png
+  - assets/logo-wide.png
+  - assets/logo-1-1.png
+  - "*.code-workspace"

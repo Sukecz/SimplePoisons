@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+.vscode/
+.idea/
+*.zip
+.release/
+AGENTS.md
+.env
+.env.*
+secrets.lua
+secrets*.lua
