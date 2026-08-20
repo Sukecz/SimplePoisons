@@ -2,7 +2,7 @@
 ## Title: SimplePoisons
 ## Notes: Two compact buttons for monitoring and applying Rogue poisons.
 ## Author: SimplePoisons Authors
-## Version: 0.1.0
+## Version: 0.1.1
 ## X-Curse-Project-ID: 1660559
 ## SavedVariablesPerCharacter: SimplePoisonsDB
 ## X-Flavor: Vanilla

@@ -23,7 +23,7 @@ while IFS= read -r toc_file; do
 done <<< "$vanilla_files"
 
 grep -qx '## Interface: 11509' SimplePoisons.toc
-grep -qx '## Version: 0.1.0' SimplePoisons.toc
+grep -qx '## Version: 0.1.1' SimplePoisons.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons.toc
 grep -qx '## SavedVariablesPerCharacter: SimplePoisonsDB' SimplePoisons.toc
 grep -qx '## X-Flavor: Vanilla' SimplePoisons.toc

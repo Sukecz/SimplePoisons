@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Made low-poison warnings much more prominent with a bright orange tint and glow.
+- Made missing-poison warnings unmistakable with a strong red tint, glow, and white label.
+- Kept normal and empty-weapon states free of warning glow.
+
 ## 0.1.0
 
 - Promoted SimplePoisons to its first stable Classic Era and Hardcore release.

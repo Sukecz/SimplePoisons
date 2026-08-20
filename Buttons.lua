@@ -29,6 +29,19 @@ local function setBackdrop(frame, borderColor, backgroundColor)
     frame:SetBackdropBorderColor(unpack(borderColor))
 end
 
+local function setWarning(button, red, green, blue, tintAlpha)
+    if not red then
+        button.warningTint:Hide()
+        button.warningGlow:Hide()
+        return
+    end
+    button.warningTint:SetColorTexture(red, green, blue, tintAlpha)
+    button.warningTint:Show()
+    button.warningGlow:SetVertexColor(red, green, blue, 1)
+    button.warningGlow:SetAlpha(0.95)
+    button.warningGlow:Show()
+end
+
 local function formatTime(milliseconds)
     local seconds = math.max(0, math.floor((tonumber(milliseconds) or 0) / 1000))
     if seconds >= 3600 then
@@ -54,6 +67,19 @@ function Buttons:CreateButton(name, slotID, slotLabel)
     button.icon:SetPoint("TOPLEFT", 4, -4)
     button.icon:SetPoint("BOTTOMRIGHT", -4, 4)
     button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+
+    button.warningTint = button:CreateTexture(nil, "ARTWORK")
+    button.warningTint:SetPoint("TOPLEFT", 4, -4)
+    button.warningTint:SetPoint("BOTTOMRIGHT", -4, 4)
+    button.warningTint:SetBlendMode("ADD")
+    button.warningTint:Hide()
+
+    button.warningGlow = button:CreateTexture(nil, "OVERLAY")
+    button.warningGlow:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    button.warningGlow:SetBlendMode("ADD")
+    button.warningGlow:SetSize(76, 76)
+    button.warningGlow:SetPoint("CENTER")
+    button.warningGlow:Hide()
 
     button.slotText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     button.slotText:SetPoint("BOTTOMLEFT", button, "TOPLEFT", 2, 2)
@@ -263,7 +289,9 @@ function Buttons:RefreshButton(button)
         button.timeText:SetText("")
         button.chargeText:SetText("")
         button.missingText:SetText(ns.L.NO_WEAPON)
+        button.missingText:SetTextColor(0.85, 0.85, 0.85)
         button.missingText:Show()
+        setWarning(button)
         setBackdrop(button, { 0.45, 0.45, 0.45, 1 }, { 0.02, 0.02, 0.02, 0.92 })
     elseif not state.hasEnchant then
         button.icon:SetDesaturated(true)
@@ -271,8 +299,10 @@ function Buttons:RefreshButton(button)
         button.timeText:SetText("")
         button.chargeText:SetText("")
         button.missingText:SetText(ns.L.MISSING)
+        button.missingText:SetTextColor(1, 1, 1)
         button.missingText:Show()
-        setBackdrop(button, { 0.95, 0.12, 0.12, 1 }, { 0.18, 0.01, 0.01, 0.96 })
+        setWarning(button, 1, 0.02, 0.02, 0.38)
+        setBackdrop(button, { 1, 0.03, 0.03, 1 }, { 0.52, 0.005, 0.005, 0.98 })
     else
         local lowTime = state.expirationMS < (ns.Database:Get("lowMinutes") * 60000)
         local lowCharges = state.charges > 0 and state.charges < ns.Database:Get("lowCharges")
@@ -282,8 +312,10 @@ function Buttons:RefreshButton(button)
         button.chargeText:SetText(state.charges > 0 and tostring(state.charges) or "")
         button.missingText:Hide()
         if lowTime or lowCharges then
-            setBackdrop(button, { 1, 0.48, 0.05, 1 }, { 0.12, 0.055, 0.005, 0.94 })
+            setWarning(button, 1, 0.32, 0.01, 0.30)
+            setBackdrop(button, { 1, 0.32, 0.01, 1 }, { 0.48, 0.10, 0.005, 0.98 })
         else
+            setWarning(button)
             setBackdrop(button, { 0.28, 0.72, 0.32, 1 }, { 0.02, 0.02, 0.02, 0.92 })
         end
     end
