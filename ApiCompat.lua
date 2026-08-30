@@ -54,6 +54,16 @@ function ApiCompat:GetItemName(itemID)
     return nil
 end
 
+function ApiCompat:RequestItemData(itemID)
+    if C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
+        C_Item.RequestLoadItemDataByID(itemID)
+        return
+    end
+    if type(GetItemInfo) == "function" then
+        GetItemInfo(itemID)
+    end
+end
+
 function ApiCompat:GetWeaponState(slotID)
     local state = {
         hasWeapon = type(GetInventoryItemID) ~= "function" or GetInventoryItemID("player", slotID) ~= nil,

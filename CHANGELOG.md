@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Requested poison item data during login so active-poison icons resolve promptly.
+- Replaced the misleading weapon-icon fallback with a generic poison icon while poison data is loading.
+
 ## 0.1.1
 
 - Made low-poison warnings much more prominent with a bright orange tint and glow.

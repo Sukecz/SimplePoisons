@@ -85,6 +85,14 @@ function PoisonData:GetRepresentativeIcon(key)
     return itemID and ns.ApiCompat:GetItemIcon(itemID) or "Interface\\Icons\\Ability_Poisons"
 end
 
+function PoisonData:RequestItemData()
+    for _, key in ipairs(self.order) do
+        for _, itemID in ipairs(self.families[key].itemIDs) do
+            ns.ApiCompat:RequestItemData(itemID)
+        end
+    end
+end
+
 function PoisonData:GetOptions()
     local items = {}
     for _, key in ipairs(self.order) do

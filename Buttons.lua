@@ -259,6 +259,17 @@ function Buttons:SetUnlocked(unlocked)
     return true
 end
 
+function Buttons:ResolveIcon(state, familyKey, slotID)
+    if state.hasEnchant then
+        if familyKey then
+            return ns.PoisonData:GetRepresentativeIcon(familyKey)
+        end
+        return "Interface\\Icons\\Ability_Poisons"
+    end
+    return ns.ApiCompat:GetWeaponTexture(slotID)
+        or "Interface\\Icons\\INV_Misc_QuestionMark"
+end
+
 function Buttons:RefreshButton(button)
     local state = ns.ApiCompat:GetWeaponState(button.slotID)
     local now = type(GetTime) == "function" and GetTime() or 0
@@ -276,9 +287,7 @@ function Buttons:RefreshButton(button)
     button.lastHadEnchant = state.hasEnchant
     button.lastEnchantID = state.enchantID
     local familyKey = state.hasEnchant and (button.cachedFamily or button.lastAppliedFamily) or nil
-    local icon = familyKey and ns.PoisonData:GetRepresentativeIcon(familyKey)
-        or ns.ApiCompat:GetWeaponTexture(button.slotID)
-        or "Interface\\Icons\\INV_Misc_QuestionMark"
+    local icon = self:ResolveIcon(state, familyKey, button.slotID)
     button.icon:SetTexture(icon)
     button.familyKey = familyKey
     button.state = state

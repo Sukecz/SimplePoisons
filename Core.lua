@@ -14,6 +14,7 @@ end
 
 function Core:Initialize()
     ns.Database:Initialize(SimplePoisonsDB)
+    ns.PoisonData:RequestItemData()
     ns.Buttons:Create()
     ns.MinimapButton:Create()
     ns.SecureActions:RefreshAll()
