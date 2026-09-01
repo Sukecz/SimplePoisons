@@ -23,7 +23,7 @@ while IFS= read -r toc_file; do
 done <<< "$vanilla_files"
 
 grep -qx '## Interface: 11509' SimplePoisons.toc
-grep -qx '## Version: 0.1.2' SimplePoisons.toc
+grep -qx '## Version: 0.1.3' SimplePoisons.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons.toc
 grep -qx '## SavedVariablesPerCharacter: SimplePoisonsDB' SimplePoisons.toc
 grep -qx '## X-Flavor: Vanilla' SimplePoisons.toc
@@ -48,5 +48,9 @@ test -f .github/workflows/release.yml
 # shellcheck disable=SC2016
 grep -Fq 'CF_API_KEY: ${{ secrets.CF_API_TOKEN }}' .github/workflows/release.yml
 grep -Fq 'uses: BigWigsMods/packager@v2' .github/workflows/release.yml
+if rg -n -F 'lastAppliedFamily' Buttons.lua; then
+    echo "The displayed poison must not change until the weapon enchant actually changes." >&2
+    exit 1
+fi
 
 echo "All SimplePoisons Lua 5.1, behavior, and TOC checks passed."

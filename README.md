@@ -37,7 +37,7 @@ untouched.
 
 ## Status
 
-SimplePoisons 0.1.2 is the current stable Classic Era and Hardcore release.
+SimplePoisons 0.1.3 is the current stable Classic Era and Hardcore release.
 Automated Lua and data tests cover the packaged project. Protected clicks,
 temporary-enchant identification, combat behavior, and final geometry still
 depend on the live WoW client.

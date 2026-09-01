@@ -113,10 +113,6 @@ function Buttons:CreateButton(name, slotID, slotLabel)
             if familyKey then
                 ns.Core:Print(string.format(ns.L.NO_POISON, ns.PoisonData:GetLabel(familyKey)))
             end
-        else
-            self.lastAppliedFamily = ns.Database:GetClick(mouseButton)
-            self.cachedFamily = nil
-            self.nextIdentityScan = 0
         end
     end)
 
@@ -286,7 +282,7 @@ function Buttons:RefreshButton(button)
     end
     button.lastHadEnchant = state.hasEnchant
     button.lastEnchantID = state.enchantID
-    local familyKey = state.hasEnchant and (button.cachedFamily or button.lastAppliedFamily) or nil
+    local familyKey = state.hasEnchant and button.cachedFamily or nil
     local icon = self:ResolveIcon(state, familyKey, button.slotID)
     button.icon:SetTexture(icon)
     button.familyKey = familyKey

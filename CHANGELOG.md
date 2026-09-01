@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3
+
+- Kept the displayed poison tied to the actual weapon enchant until application finishes successfully.
+- Prevented interrupted or cancelled poison casts from showing the selected poison as active.
+
 ## 0.1.2
 
 - Requested poison item data during login so active-poison icons resolve promptly.
