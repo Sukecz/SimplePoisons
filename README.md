@@ -3,8 +3,9 @@
 ![SimplePoisons](assets/logo-wide.png)
 
 SimplePoisons is a focused, dependency-free poison monitor and applicator for
-Rogue players in WoW Classic Era and Classic Hardcore. It replaces sprawling
-poison menus and detached warnings with one compact pair of weapon buttons.
+Rogue players in WoW Classic Era, Classic Hardcore, and the WoW Forever beta.
+It replaces sprawling poison menus and detached warnings with one compact pair
+of weapon buttons.
 
 It keeps everything on two buttons:
 
@@ -37,10 +38,9 @@ untouched.
 
 ## Status
 
-SimplePoisons 0.1.3 is the current stable Classic Era and Hardcore release.
-Automated Lua and data tests cover the packaged project. Protected clicks,
-temporary-enchant identification, combat behavior, and final geometry still
-depend on the live WoW client.
-
-Support for TBC and other WoW versions is planned for later releases after
-separate client-specific implementation and verification.
+SimplePoisons 0.2.0-beta.1 adds beta support for WoW Forever 1.60.1 while
+retaining Classic Era and Hardcore support. Forever uses its modern temporary
+enchant API; both clients keep the same secure, hardware-click poison workflow.
+Automated Lua, data, metadata, and packaging tests cover the project. Protected
+clicks, poison replacement confirmation behavior, and final geometry still
+require live verification in each client.

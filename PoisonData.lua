@@ -9,35 +9,42 @@ PoisonData.order = {
     "crippling",
     "wound",
     "mindNumbing",
-    "distracting",
 }
 
 PoisonData.families = {
     instant = {
         label = "Instant Poison",
         itemIDs = { 6947, 6949, 6950, 8926, 8927, 8928 },
+        enchantIDs = { 323, 324, 325, 623, 624, 625 },
     },
     deadly = {
         label = "Deadly Poison",
         itemIDs = { 2892, 2893, 8984, 8985, 20844 },
+        enchantIDs = { 7, 8, 626, 627, 2630 },
     },
     crippling = {
         label = "Crippling Poison",
         itemIDs = { 3775, 3776 },
+        enchantIDs = { 22, 603 },
     },
     wound = {
         label = "Wound Poison",
         itemIDs = { 10918, 10920, 10921, 10922 },
+        enchantIDs = { 703, 704, 705, 706 },
     },
     mindNumbing = {
         label = "Mind-numbing Poison",
         itemIDs = { 5237, 6951, 9186 },
-    },
-    distracting = {
-        label = "Distracting Poison",
-        itemIDs = { 9187 },
+        enchantIDs = { 35, 23, 643 },
     },
 }
+
+PoisonData.enchantFamilies = {}
+for familyKey, family in pairs(PoisonData.families) do
+    for _, enchantID in ipairs(family.enchantIDs) do
+        PoisonData.enchantFamilies[enchantID] = familyKey
+    end
+end
 
 function PoisonData:IsValidFamily(key)
     return type(key) == "string" and self.families[key] ~= nil
@@ -50,6 +57,10 @@ end
 function PoisonData:GetLabel(key)
     local family = self:GetFamily(key)
     return family and family.label or ns.L.NONE
+end
+
+function PoisonData:GetFamilyByEnchantID(enchantID)
+    return self.enchantFamilies[tonumber(enchantID)]
 end
 
 function PoisonData:GetAvailableItem(key)

@@ -1,6 +1,6 @@
 # CurseForge project summary
 
-A lightweight two-button Rogue poison tracker and click-to-apply helper for WoW Classic Era and Hardcore.
+A lightweight two-button Rogue poison tracker and click-to-apply helper for WoW Classic Era, Hardcore, and Forever.
 
 # Recommended CurseForge categories
 
@@ -53,6 +53,6 @@ SimplePoisons automatically uses the highest available rank of the selected pois
 
 ## Compatibility
 
-The initial release targets WoW Classic Era and Classic Hardcore. Support for TBC and other WoW versions is planned for later releases and will be added only after separate client-specific testing.
+SimplePoisons supports WoW Classic Era, Classic Hardcore, and the WoW Forever beta. Forever support follows its separate 1.60.1 client metadata and modern temporary-enchant API.
 
 Poison application always requires a real mouse click. SimplePoisons does not automate gameplay, suppress Blizzard errors, or bypass poison replacement confirmations.

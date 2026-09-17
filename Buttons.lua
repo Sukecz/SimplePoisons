@@ -277,7 +277,8 @@ function Buttons:RefreshButton(button)
         if enchantChanged then
             button.cachedFamily = nil
         end
-        button.cachedFamily = ns.ApiCompat:DetectPoisonFamily(button.slotID) or button.cachedFamily
+        button.cachedFamily = ns.ApiCompat:DetectPoisonFamily(button.slotID, state.enchantID)
+            or button.cachedFamily
         button.nextIdentityScan = now + 2
     end
     button.lastHadEnchant = state.hasEnchant

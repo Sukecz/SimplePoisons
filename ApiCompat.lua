@@ -73,22 +73,31 @@ function ApiCompat:GetWeaponState(slotID)
         enchantID = nil,
     }
 
-    if type(GetWeaponEnchantInfo) ~= "function" then
+    if C_PaperDollInfo and type(C_PaperDollInfo.GetTemporaryEnchantmentInfo) == "function" then
+        local enchantInfo = C_PaperDollInfo.GetTemporaryEnchantmentInfo(slotID)
+        if enchantInfo then
+            state.hasEnchant = true
+            state.expirationMS = tonumber(enchantInfo.remainingTimeMs) or 0
+            state.charges = tonumber(enchantInfo.chargesRemaining) or 0
+            state.enchantID = tonumber(enchantInfo.enchantID)
+        end
         return state
     end
 
-    local mh, mhExpiration, mhCharges, mhEnchantID,
-        oh, ohExpiration, ohCharges, ohEnchantID = GetWeaponEnchantInfo()
-    if slotID == ns.Constants.MAIN_HAND_SLOT then
-        state.hasEnchant = mh and true or false
-        state.expirationMS = tonumber(mhExpiration) or 0
-        state.charges = tonumber(mhCharges) or 0
-        state.enchantID = tonumber(mhEnchantID)
-    else
-        state.hasEnchant = oh and true or false
-        state.expirationMS = tonumber(ohExpiration) or 0
-        state.charges = tonumber(ohCharges) or 0
-        state.enchantID = tonumber(ohEnchantID)
+    if type(GetWeaponEnchantInfo) == "function" then
+        local mh, mhExpiration, mhCharges, mhEnchantID,
+            oh, ohExpiration, ohCharges, ohEnchantID = GetWeaponEnchantInfo()
+        if slotID == ns.Constants.MAIN_HAND_SLOT then
+            state.hasEnchant = mh and true or false
+            state.expirationMS = tonumber(mhExpiration) or 0
+            state.charges = tonumber(mhCharges) or 0
+            state.enchantID = tonumber(mhEnchantID)
+        else
+            state.hasEnchant = oh and true or false
+            state.expirationMS = tonumber(ohExpiration) or 0
+            state.charges = tonumber(ohCharges) or 0
+            state.enchantID = tonumber(ohEnchantID)
+        end
     end
     return state
 end
@@ -104,7 +113,12 @@ local function normalized(text)
     return type(text) == "string" and string.lower(text) or ""
 end
 
-function ApiCompat:DetectPoisonFamily(slotID)
+function ApiCompat:DetectPoisonFamily(slotID, enchantID)
+    local familyKey = ns.PoisonData:GetFamilyByEnchantID(enchantID)
+    if familyKey then
+        return familyKey
+    end
+
     if type(CreateFrame) ~= "function" or not UIParent then
         return nil
     end
@@ -156,8 +170,9 @@ function ApiCompat:GetBuildReport()
         version, build, date, interface = GetBuildInfo()
     end
     return string.format(
-        "version=%s build=%s date=%s interface=%s project=%s weaponEnchantAPI=%s",
+        "version=%s build=%s date=%s interface=%s project=%s weaponEnchantAPI=%s temporaryEnchantAPI=%s",
         tostring(version), tostring(build), tostring(date), tostring(interface),
-        tostring(WOW_PROJECT_ID), tostring(type(GetWeaponEnchantInfo) == "function")
+        tostring(WOW_PROJECT_ID), tostring(type(GetWeaponEnchantInfo) == "function"),
+        tostring(C_PaperDollInfo and type(C_PaperDollInfo.GetTemporaryEnchantmentInfo) == "function")
     )
 end

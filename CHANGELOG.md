@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0-beta.1
+
+- Added a dedicated WoW Forever beta TOC for client 1.60.1 / Interface 16001.
+- Added the modern temporary-enchant API used by Forever while retaining the Classic Era fallback.
+- Added direct poison-family detection from the beta client's weapon enchant IDs.
+- Removed the invalid Distracting Poison option; item 9187 is Elixir of Greater Agility.
+- Kept poison application on prebuilt secure macros and real hardware clicks.
+
 ## 0.1.3
 
 - Kept the displayed poison tied to the actual weapon enchant until application finishes successfully.

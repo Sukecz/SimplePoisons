@@ -1,12 +1,12 @@
-## Interface: 11509
+## Interface: 16001
 ## Title: SimplePoisons
 ## Notes: Two compact buttons for monitoring and applying Rogue poisons.
 ## Author: SimplePoisons Authors
 ## Version: 0.2.0-beta.1
 ## X-Curse-Project-ID: 1660559
 ## SavedVariablesPerCharacter: SimplePoisonsDB
-## X-Flavor: Vanilla
-## AllowLoadGameType: vanilla
+## X-Flavor: Forever
+## AllowLoadGameType: camelot
 ## IconTexture: Interface\AddOns\SimplePoisons\assets\minimap-icon.tga
 
 Locales\enUS.lua

@@ -53,4 +53,5 @@ jobs:
           fi
 
       - name: Package and publish addon
-        uses: BigWigsMods/packager@v2
+        # Immutable audited patch for WoW Forever while upstream PR #202 is pending.
+        uses: R41z0r/packager@7635232c5a62ae46908d9e82b8be0575d6d4d5d3
