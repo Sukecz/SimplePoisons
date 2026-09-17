@@ -44,3 +44,12 @@ enchant API; both clients keep the same secure, hardware-click poison workflow.
 Automated Lua, data, metadata, and packaging tests cover the project. Protected
 clicks, poison replacement confirmation behavior, and final geometry still
 require live verification in each client.
+
+## Local Windows deployment
+
+Shared deployment is maintained in
+`/home/msminipc/projects/wow-addon-deployer`; this repository does not keep a
+private copy. Run `/home/msminipc/bin/deploy-wow-addons-pc` on MINIPC. The
+central registry installs SimplePoisons into Classic Era and, when present,
+the Forever beta while preserving `SimplePoisonsDB`. Deployment does not
+publish a release.

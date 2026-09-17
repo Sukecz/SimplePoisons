@@ -48,9 +48,6 @@ file assets/minimap-icon.tga | grep -Fq '256 x 256 x 32'
 test -f assets/logo-wide.png
 file assets/logo-wide-ui.tga | grep -Fq '512 x 288 x 24'
 test -f assets/logo-1-1.png
-# PowerShell variables must remain literal here.
-# shellcheck disable=SC2016
-grep -Fq '"$Server`:$ProjectRoot/assets"' tools/windows/Deploy-WoW-Addons.ps1
 test -f LICENSE
 test -f .github/workflows/ci.yml
 test -f .github/workflows/release.yml
