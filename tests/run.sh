@@ -49,7 +49,7 @@ grep -qx '## AllowLoadGameType: camelot' SimplePoisons_Camelot.toc
 grep -Fqx '## IconTexture: Interface\AddOns\SimplePoisons\assets\minimap-icon.tga' SimplePoisons.toc
 grep -Fq '_G.SLASH_SIMPLEPOISONS2 = "/sp"' SlashCommands.lua
 obsolete_slash="/p""p"
-if rg -n -F "$obsolete_slash" .; then
+if grep -RInF --exclude-dir=.git "$obsolete_slash" .; then
     echo "Obsolete short slash command is still referenced." >&2
     exit 1
 fi
@@ -64,17 +64,17 @@ test -f .github/workflows/release.yml
 # shellcheck disable=SC2016
 grep -Fq 'CF_API_KEY: ${{ secrets.CF_API_TOKEN }}' .github/workflows/release.yml
 grep -Fq 'uses: R41z0r/packager@7635232c5a62ae46908d9e82b8be0575d6d4d5d3' .github/workflows/release.yml
-if rg -n -F '9187' PoisonData.lua; then
+if grep -nF '9187' PoisonData.lua; then
     echo "Elixir of Greater Agility must not be offered as a poison." >&2
     exit 1
 fi
 for expected in 21835 21927 22053 22054 22055 2640 2641 2642 2643 2644; do
-    if ! rg -q "(^|[^0-9])$expected([^0-9]|$)" PoisonData.lua; then
+    if ! grep -Eq "(^|[^0-9])$expected([^0-9]|$)" PoisonData.lua; then
         echo "Missing TBC poison data ID: $expected" >&2
         exit 1
     fi
 done
-if rg -n -F 'lastAppliedFamily' Buttons.lua; then
+if grep -nF 'lastAppliedFamily' Buttons.lua; then
     echo "The displayed poison must not change until the weapon enchant actually changes." >&2
     exit 1
 fi
