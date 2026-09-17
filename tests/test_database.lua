@@ -31,6 +31,7 @@ assert(ns.Database:SetClick("LeftButton", "deadly"))
 assert(ns.Database:GetClick("LeftButton") == "deadly")
 assert(not ns.Database:SetClick("Button4", "deadly"))
 assert(not ns.Database:SetClick("LeftButton", "invalid"))
+assert(not ns.Database:SetClick("LeftButton", "anesthetic"))
 
 local defaults = ns.Database:Reset()
 assert(defaults.lowMinutes == 3)

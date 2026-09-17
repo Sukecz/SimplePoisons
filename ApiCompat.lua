@@ -148,9 +148,9 @@ function ApiCompat:DetectPoisonFamily(slotID, enchantID)
     end
 
     for _, key in ipairs(ns.PoisonData.order) do
-        local family = ns.PoisonData:GetFamily(key)
-        for index = #family.itemIDs, 1, -1 do
-            local name = self:GetItemName(family.itemIDs[index])
+        local itemIDs = ns.PoisonData:GetItemIDs(key)
+        for index = #itemIDs, 1, -1 do
+            local name = self:GetItemName(itemIDs[index])
             if name then
                 local needle = normalized(name)
                 for _, line in ipairs(lines) do

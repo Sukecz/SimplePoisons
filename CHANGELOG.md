@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Added a dedicated Burning Crusade Classic TOC for client 2.5.6 / Interface 20506.
+- Added Instant Poison VII, Deadly Poison VI and VII, and Wound Poison V.
+- Added the TBC-only Anesthetic Poison family.
+- Kept the separate WoW Forever client support in beta pending live server testing.
+
 ## 0.2.0-beta.1
 
 - Added a dedicated WoW Forever beta TOC for client 1.60.1 / Interface 16001.

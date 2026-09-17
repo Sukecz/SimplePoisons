@@ -1,6 +1,6 @@
 # CurseForge project summary
 
-A lightweight two-button Rogue poison tracker and click-to-apply helper for WoW Classic Era, Hardcore, and Forever.
+A lightweight two-button Rogue poison tracker and click-to-apply helper for WoW Classic Era, Hardcore, Burning Crusade Classic, and Forever.
 
 # Recommended CurseForge categories
 
@@ -53,6 +53,6 @@ SimplePoisons automatically uses the highest available rank of the selected pois
 
 ## Compatibility
 
-SimplePoisons supports WoW Classic Era, Classic Hardcore, and the WoW Forever beta. Forever support follows its separate 1.60.1 client metadata and modern temporary-enchant API.
+SimplePoisons supports WoW Classic Era, Classic Hardcore, and Burning Crusade Classic 2.5.6. TBC support includes Instant Poison VII, Deadly Poison VI and VII, Wound Poison V, and Anesthetic Poison. Separate WoW Forever 1.60.1 support remains beta pending live server testing and uses its modern temporary-enchant API.
 
 Poison application always requires a real mouse click. SimplePoisons does not automate gameplay, suppress Blizzard errors, or bypass poison replacement confirmations.

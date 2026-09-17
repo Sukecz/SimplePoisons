@@ -14,7 +14,7 @@ local function clamp(value, range, fallback)
 end
 
 local function validFamily(value, fallback)
-    return ns.PoisonData:IsValidFamily(value) and value or fallback
+    return ns.PoisonData:IsAvailableFamily(value) and value or fallback
 end
 
 function Database:Initialize(saved)
@@ -83,7 +83,7 @@ function Database:GetClick(mouseButton)
 end
 
 function Database:SetClick(mouseButton, familyKey)
-    if not self.data or not self.data.clicks[mouseButton] or not ns.PoisonData:IsValidFamily(familyKey) then
+    if not self.data or not self.data.clicks[mouseButton] or not ns.PoisonData:IsAvailableFamily(familyKey) then
         return false
     end
     self.data.clicks[mouseButton] = familyKey
