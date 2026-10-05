@@ -196,6 +196,11 @@ function Buttons:Create()
 end
 
 function Buttons:ApplyLayout()
+    if ns.ApiCompat:IsCombatLocked() then
+        self.layoutPending = true
+        return
+    end
+    self.layoutPending = false
     if not self.anchor then
         return
     end
@@ -222,6 +227,11 @@ function Buttons:ApplyLayout()
 end
 
 function Buttons:ApplyTextStyle()
+    if ns.ApiCompat:IsCombatLocked() then
+        self.textStylePending = true
+        return
+    end
+    self.textStylePending = false
     if not self.mainButton then
         return
     end
@@ -235,9 +245,25 @@ function Buttons:ApplyTextStyle()
 end
 
 function Buttons:ApplyPosition()
+    if ns.ApiCompat:IsCombatLocked() then
+        self.positionPending = true
+        return
+    end
+    self.positionPending = false
     local position = ns.Database:Get("position")
     self.anchor:ClearAllPoints()
     self.anchor:SetPoint(position.point, UIParent, position.relativePoint, position.x, position.y)
+end
+
+function Buttons:OnCombatEnded()
+    if self.textStylePending then
+        self:ApplyTextStyle()
+    elseif self.layoutPending then
+        self:ApplyLayout()
+    end
+    if self.positionPending then
+        self:ApplyPosition()
+    end
 end
 
 function Buttons:SetUnlocked(unlocked)
@@ -260,7 +286,8 @@ function Buttons:ResolveIcon(state, familyKey, slotID)
         if familyKey then
             return ns.PoisonData:GetRepresentativeIcon(familyKey, state.enchantID)
         end
-        return "Interface\\Icons\\Ability_Poisons"
+        return ns.ApiCompat:GetWeaponTexture(slotID)
+            or "Interface\\Icons\\INV_Misc_QuestionMark"
     end
     return ns.ApiCompat:GetWeaponTexture(slotID)
         or "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -270,7 +297,7 @@ function Buttons:RefreshButton(button)
     local state = ns.ApiCompat:GetWeaponState(button.slotID)
     local now = type(GetTime) == "function" and GetTime() or 0
     local enchantChanged = state.hasEnchant ~= button.lastHadEnchant
-        or (state.enchantID and state.enchantID ~= button.lastEnchantID)
+        or state.enchantID ~= button.lastEnchantID
     if not state.hasEnchant then
         button.cachedFamily = nil
     elseif enchantChanged or now >= (button.nextIdentityScan or 0) then
@@ -278,7 +305,6 @@ function Buttons:RefreshButton(button)
             button.cachedFamily = nil
         end
         button.cachedFamily = ns.ApiCompat:DetectPoisonFamily(button.slotID, state.enchantID)
-            or button.cachedFamily
         button.nextIdentityScan = now + 2
     end
     button.lastHadEnchant = state.hasEnchant
@@ -310,14 +336,17 @@ function Buttons:RefreshButton(button)
         setWarning(button, 1, 0.02, 0.02, 0.38)
         setBackdrop(button, { 1, 0.03, 0.03, 1 }, { 0.52, 0.005, 0.005, 0.98 })
     else
-        local lowTime = state.expirationMS < (ns.Database:Get("lowMinutes") * 60000)
+        local lowTime = state.hasExpirationTime and state.expirationMS < (ns.Database:Get("lowMinutes") * 60000)
         local lowCharges = state.charges > 0 and state.charges < ns.Database:Get("lowCharges")
         button.icon:SetDesaturated(false)
         button.icon:SetAlpha(1)
-        button.timeText:SetText(formatTime(state.expirationMS))
+        button.timeText:SetText(state.hasExpirationTime and formatTime(state.expirationMS) or "")
         button.chargeText:SetText(state.charges > 0 and tostring(state.charges) or "")
         button.missingText:Hide()
-        if lowTime or lowCharges then
+        if not familyKey then
+            setWarning(button)
+            setBackdrop(button, { 0.55, 0.55, 0.55, 1 }, { 0.02, 0.02, 0.02, 0.92 })
+        elseif lowTime or lowCharges then
             setWarning(button, 1, 0.32, 0.01, 0.30)
             setBackdrop(button, { 1, 0.32, 0.01, 1 }, { 0.48, 0.10, 0.005, 0.98 })
         else
@@ -327,12 +356,33 @@ function Buttons:RefreshButton(button)
     end
 end
 
-function Buttons:Refresh()
+function Buttons:Refresh(resetIdentity)
     if not self.anchor then
         return
     end
+    if resetIdentity then
+        self.mainButton.nextIdentityScan = 0
+        self.offButton.nextIdentityScan = 0
+    end
     self:RefreshButton(self.mainButton)
     self:RefreshButton(self.offButton)
+    self:UpdateTimer()
+end
+
+local function updateTimers(_, elapsed)
+    Buttons:OnUpdate(elapsed)
+end
+
+function Buttons:UpdateTimer()
+    local main = self.mainButton.state
+    local off = self.offButton.state
+    local active = (main.hasEnchant and main.hasExpirationTime and main.expirationMS > 0)
+        or (off.hasEnchant and off.hasExpirationTime and off.expirationMS > 0)
+    if active ~= self.timerActive then
+        self.timerActive = active
+        self.elapsed = 0
+        self.anchor:SetScript("OnUpdate", active and updateTimers or nil)
+    end
 end
 
 function Buttons:ShowTooltip(button)
@@ -345,7 +395,11 @@ function Buttons:ShowTooltip(button)
     if state.hasEnchant then
         local activeName = button.familyKey and ns.PoisonData:GetLabel(button.familyKey) or ns.L.UNKNOWN_ENCHANT
         GameTooltip:AddLine(string.format(ns.L.ACTIVE, activeName), 1, 1, 1)
-        GameTooltip:AddLine(string.format(ns.L.TIME_LEFT, formatTime(state.expirationMS)), 0.8, 0.8, 0.8)
+        if not button.familyKey then
+            GameTooltip:AddLine(ns.L.OTHER_ENCHANT, 0.8, 0.8, 0.8, true)
+        end
+        GameTooltip:AddLine(state.hasExpirationTime
+            and string.format(ns.L.TIME_LEFT, formatTime(state.expirationMS)) or ns.L.NO_EXPIRATION, 0.8, 0.8, 0.8)
         if state.charges > 0 then
             GameTooltip:AddLine(string.format(ns.L.CHARGES_LEFT, state.charges), 0.8, 0.8, 0.8)
         end
@@ -360,9 +414,19 @@ function Buttons:ShowTooltip(button)
     }
     for _, mapping in ipairs(mappings) do
         local familyKey = ns.Database:GetClick(mapping[1])
-        local label = ns.PoisonData:GetLabel(familyKey)
-        local stock = ns.PoisonData:GetStock(familyKey)
-        GameTooltip:AddDoubleLine(mapping[2], label .. "  |cffaaaaaa(" .. stock .. ")|r", 1, 0.82, 0, 1, 1, 1)
+        -- Show the item actually bound to the secure click, including during combat.
+        local itemID = button.availableItems[mapping[1]]
+        local label
+        if itemID then
+            label = string.format(ns.L.RANK_STOCK, ns.PoisonData:GetItemLabel(familyKey, itemID),
+                ns.ApiCompat:GetItemCount(itemID))
+        else
+            label = string.format(ns.L.NO_USABLE_RANK, ns.PoisonData:GetLabel(familyKey))
+        end
+        GameTooltip:AddDoubleLine(mapping[2], label, 1, 0.82, 0, 1, 1, 1)
+    end
+    if ns.SecureActions.refreshPending then
+        GameTooltip:AddLine(ns.L.PENDING_REFRESH, 1, 0.82, 0, true)
     end
     GameTooltip:Show()
 end

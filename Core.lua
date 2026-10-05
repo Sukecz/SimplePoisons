@@ -37,15 +37,21 @@ function Core:OnEvent(event, ...)
         ns.MinimapButton:RefreshVisibility()
         self:Print(ns.L.READY)
     elseif event == "PLAYER_REGEN_ENABLED" then
-        ns.SecureActions:OnCombatEnded()
+        ns.SecureActions:RefreshAll()
+        ns.Buttons:OnCombatEnded()
+        ns.Buttons:Refresh(true)
         if ns.Options.frame and ns.Options.frame:IsShown() then
             ns.Options:Refresh()
         end
-    elseif event == "BAG_UPDATE_DELAYED" or event == "GET_ITEM_INFO_RECEIVED" then
+    elseif event == "BAG_UPDATE_DELAYED" or event == "GET_ITEM_INFO_RECEIVED"
+        or event == "SKILL_LINES_CHANGED" or event == "SPELLS_CHANGED"
+        or event == "PLAYER_ALIVE" or event == "PLAYER_ENTERING_WORLD"
+        or (event == "UNIT_LEVEL" and ... == "player") then
         ns.SecureActions:RefreshAll()
-        ns.Buttons:Refresh()
-    elseif event == "PLAYER_EQUIPMENT_CHANGED" or event == "UNIT_INVENTORY_CHANGED" then
-        ns.Buttons:Refresh()
+        ns.Buttons:Refresh(true)
+    elseif event == "PLAYER_EQUIPMENT_CHANGED"
+        or (event == "UNIT_INVENTORY_CHANGED" and ... == "player") then
+        ns.Buttons:Refresh(true)
     end
 end
 
@@ -57,11 +63,11 @@ Core.frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 Core.frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
 Core.frame:RegisterEvent("BAG_UPDATE_DELAYED")
 Core.frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+Core.frame:RegisterEvent("UNIT_LEVEL")
+Core.frame:RegisterEvent("SKILL_LINES_CHANGED")
+Core.frame:RegisterEvent("SPELLS_CHANGED")
+Core.frame:RegisterEvent("PLAYER_ALIVE")
+Core.frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 Core.frame:SetScript("OnEvent", function(_, event, ...)
     Core:OnEvent(event, ...)
-end)
-Core.frame:SetScript("OnUpdate", function(_, elapsed)
-    if ns.Buttons and ns.Buttons.anchor and ns.Buttons.anchor:IsShown() then
-        ns.Buttons:OnUpdate(elapsed)
-    end
 end)

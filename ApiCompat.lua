@@ -30,6 +30,16 @@ function ApiCompat:GetItemCount(itemID)
     return 0
 end
 
+function ApiCompat:IsItemUsable(itemID)
+    if C_Item and type(C_Item.IsUsableItem) == "function" then
+        return C_Item.IsUsableItem(itemID) and true or false
+    end
+    if type(IsUsableItem) == "function" then
+        return IsUsableItem(itemID) and true or false
+    end
+    return false
+end
+
 function ApiCompat:GetItemIcon(itemID)
     if type(GetItemIcon) == "function" then
         return GetItemIcon(itemID)
@@ -69,6 +79,7 @@ function ApiCompat:GetWeaponState(slotID)
         hasWeapon = type(GetInventoryItemID) ~= "function" or GetInventoryItemID("player", slotID) ~= nil,
         hasEnchant = false,
         expirationMS = 0,
+        hasExpirationTime = false,
         charges = 0,
         enchantID = nil,
     }
@@ -78,6 +89,7 @@ function ApiCompat:GetWeaponState(slotID)
         if enchantInfo then
             state.hasEnchant = true
             state.expirationMS = tonumber(enchantInfo.remainingTimeMs) or 0
+            state.hasExpirationTime = enchantInfo.hasExpirationTime ~= false
             state.charges = tonumber(enchantInfo.chargesRemaining) or 0
             state.enchantID = tonumber(enchantInfo.enchantID)
         end
@@ -99,6 +111,7 @@ function ApiCompat:GetWeaponState(slotID)
             state.enchantID = tonumber(ohEnchantID)
         end
     end
+    state.hasExpirationTime = state.hasEnchant and state.expirationMS > 0
     return state
 end
 

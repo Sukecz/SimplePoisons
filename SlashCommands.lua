@@ -35,7 +35,7 @@ function SlashCommands:Register()
                 return
             end
             ns.Database:Reset()
-            ns.Buttons:ApplyLayout()
+            ns.Buttons:ApplyTextStyle()
             ns.Buttons:ApplyPosition()
             ns.SecureActions:RefreshAll()
             ns.Buttons:Refresh()

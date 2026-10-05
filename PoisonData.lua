@@ -117,11 +117,24 @@ function PoisonData:GetAvailableItem(key)
     local itemIDs = self:GetItemIDs(key)
     for index = #itemIDs, 1, -1 do
         local itemID = itemIDs[index]
-        if ns.ApiCompat:GetItemCount(itemID) > 0 then
+        if ns.ApiCompat:GetItemCount(itemID) > 0 and ns.ApiCompat:IsItemUsable(itemID) then
             return itemID
         end
     end
     return nil
+end
+
+function PoisonData:GetItemLabel(key, itemID)
+    local name = ns.ApiCompat:GetItemName(itemID)
+    if name then
+        return name
+    end
+    for rank, candidate in ipairs(self:GetItemIDs(key)) do
+        if candidate == itemID then
+            return string.format(ns.L.POISON_RANK, self:GetLabel(key), rank)
+        end
+    end
+    return self:GetLabel(key)
 end
 
 function PoisonData:GetStock(key)

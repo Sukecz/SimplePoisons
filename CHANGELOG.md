@@ -1,10 +1,18 @@
 # Changelog
 
-## 0.2.1
+## 0.2.2
 
 - Display the icon of the poison actually applied to each weapon, including Crippling Poison versus Crippling Poison II.
 - Keep applied-poison icons independent of bag contents and item usability while dead or a ghost.
-- Apply the shared icon fix to Classic Era/Hardcore, Burning Crusade Classic, and WoW Forever beta.
+- Apply the shared fixes to Classic Era/Hardcore, Burning Crusade Classic, and WoW Forever beta.
+
+- Blocked slider changes during combat and deferred protected layout refreshes.
+- Select the highest usable poison rank and refresh selections on character changes.
+- Show the bound poison rank and its stock in each click's tooltip.
+- Display unidentified temporary enchants with a neutral border and weapon icon.
+- Stop timer updates when no timed weapon enchant is active.
+- Respect enchants without expiration and restore font size when resetting settings.
+- Added regression coverage for combat settings, poison catalogs, rank selection, and timer lifecycle.
 
 ## 0.2.0
 

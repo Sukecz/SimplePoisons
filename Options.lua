@@ -103,6 +103,11 @@ local function createSlider(parent, name, labelText, y, minValue, maxValue, step
         _G[name .. "Text"]:SetText(labelText .. ": " .. formatter(value))
     end
     slider:SetScript("OnValueChanged", function(self, value)
+        if not self.refreshing and ns.ApiCompat:IsCombatLocked() then
+            self:Refresh()
+            ns.Core:Print(ns.L.COMBAT_LOCKED)
+            return
+        end
         value = math.floor((value / step) + 0.5) * step
         updateText(value)
         if not self.refreshing then
@@ -197,6 +202,11 @@ function Options:Create()
         function(value) ns.Database:Set("textSize", value) end,
         function(value) return tostring(math.floor(value)) end)
     frame.textSize:SetScript("OnValueChanged", function(self, value)
+        if not self.refreshing and ns.ApiCompat:IsCombatLocked() then
+            self:Refresh()
+            ns.Core:Print(ns.L.COMBAT_LOCKED)
+            return
+        end
         value = math.floor(value + 0.5)
         _G.SimplePoisonsTextSizeText:SetText(ns.L.TEXT_SIZE .. ": " .. value)
         if not self.refreshing then
