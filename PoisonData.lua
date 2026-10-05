@@ -135,12 +135,39 @@ function PoisonData:GetStock(key)
     return total
 end
 
-function PoisonData:GetRepresentativeIcon(key)
-    local itemID = self:GetAvailableItem(key)
+function PoisonData:GetRepresentativeIcon(key, enchantID)
     local family = self:GetFamily(key)
+    if not family or not self:IsAvailableFamily(key) then
+        return "Interface\\Icons\\Ability_Poisons"
+    end
+    -- Monitoring follows the applied rank, independently of stock or usability.
+    enchantID = tonumber(enchantID)
+    local itemID
+    for rank, candidate in ipairs(family.enchantIDs) do
+        if candidate == enchantID then
+            itemID = family.itemIDs[rank]
+            break
+        end
+    end
+    if not itemID and ns.ApiCompat:IsTBC() then
+        for rank, candidate in ipairs(family.tbcEnchantIDs or {}) do
+            if candidate == enchantID then
+                itemID = family.tbcItemIDs[rank]
+                break
+            end
+        end
+    end
     local itemIDs = self:GetItemIDs(key)
+    if not itemID then
+        for rank = #itemIDs, 1, -1 do
+            if ns.ApiCompat:GetItemCount(itemIDs[rank]) > 0 then
+                itemID = itemIDs[rank]
+                break
+            end
+        end
+    end
     itemID = itemID or itemIDs[#itemIDs]
-    return itemID and ns.ApiCompat:GetItemIcon(itemID) or "Interface\\Icons\\Ability_Poisons"
+    return (itemID and ns.ApiCompat:GetItemIcon(itemID)) or "Interface\\Icons\\Ability_Poisons"
 end
 
 function PoisonData:RequestItemData()

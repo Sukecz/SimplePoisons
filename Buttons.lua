@@ -258,7 +258,7 @@ end
 function Buttons:ResolveIcon(state, familyKey, slotID)
     if state.hasEnchant then
         if familyKey then
-            return ns.PoisonData:GetRepresentativeIcon(familyKey)
+            return ns.PoisonData:GetRepresentativeIcon(familyKey, state.enchantID)
         end
         return "Interface\\Icons\\Ability_Poisons"
     end

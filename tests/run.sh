@@ -32,9 +32,9 @@ diff -u \
 grep -qx '## Interface: 11509' SimplePoisons.toc
 grep -qx '## Interface: 20506' SimplePoisons_TBC.toc
 grep -qx '## Interface: 16001' SimplePoisons_Camelot.toc
-grep -qx '## Version: 0.2.0' SimplePoisons.toc
-grep -qx '## Version: 0.2.0' SimplePoisons_TBC.toc
-grep -qx '## Version: 0.2.0' SimplePoisons_Camelot.toc
+grep -qx '## Version: 0.2.1' SimplePoisons.toc
+grep -qx '## Version: 0.2.1' SimplePoisons_TBC.toc
+grep -qx '## Version: 0.2.1' SimplePoisons_Camelot.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons_TBC.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons_Camelot.toc

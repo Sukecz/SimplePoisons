@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Display the icon of the poison actually applied to each weapon, including Crippling Poison versus Crippling Poison II.
+- Keep applied-poison icons independent of bag contents and item usability while dead or a ghost.
+- Apply the shared icon fix to Classic Era/Hardcore, Burning Crusade Classic, and WoW Forever beta.
+
 ## 0.2.0
 
 - Added a dedicated Burning Crusade Classic TOC for client 2.5.6 / Interface 20506.
