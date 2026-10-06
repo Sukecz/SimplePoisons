@@ -42,6 +42,24 @@ stock = {}
 assert(icon(16) == "icon:3775")
 assert(icon(17) == "icon:3776")
 
+-- Current Forever uses weapon-slot enums and can return several enchant types.
+-- Poison icons must still follow each hand's applied rank, with empty bags.
+Enum = {
+    WeaponSlot = { MainHand = 0, OffHand = 1 },
+    ItemEnchantType = { Permanent = 1, Temporary = 2, Imbue = 3 },
+}
+C_Item = { GetWeaponEnchantInfo = function(weaponSlot)
+    return {
+        { hasEnchant = true, enchantType = 1, timeLeft = 0, charges = 0, enchantID = 1900 },
+        { hasEnchant = true, enchantType = 2, timeLeft = 60000, charges = 12,
+            enchantID = weaponSlot == 0 and 22 or 603 },
+    }
+end }
+assert(icon(16) == "icon:3775")
+assert(icon(17) == "icon:3776")
+C_Item = nil
+Enum = nil
+
 -- Every supported enchant resolves its own item texture, even with no stock.
 for _, tbc in ipairs({ false, true }) do
     WOW_PROJECT_ID = tbc and 5 or 2

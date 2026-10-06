@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.3
+
+- Refresh poison status on weapon-enchant and weapon-slot changes so an idle monitor does not remain on `MISSING` after poison application.
+- Read weapon enchants through the current Forever API, retaining support for earlier Forever builds and Classic Era/Hardcore/TBC.
+- Ignore permanent enchants and prefer an applied poison when another temporary imbue is present.
+- Extend `/sp api` reporting and regression tests for enchant events, both hands, and current Forever API compatibility.
+
+Forever support remains beta pending live rogue testing.
+
 ## 0.2.2
 
 - Display the icon of the poison actually applied to each weapon, including Crippling Poison versus Crippling Poison II.

@@ -104,6 +104,23 @@ local anchor = ns.Buttons.anchor
 assert(not anchor.scripts.OnUpdate and not ns.Core.frame.scripts.OnUpdate, "idle means no polling")
 assert(main.missingText.shown)
 
+-- A completed poison application can emit only the dedicated enchant event.
+-- It must wake an idle monitor, including in combat, without changing clicks.
+states[16] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
+    expirationMS = 600000, charges = 100, enchantID = 625 }
+combat = true
+local boundMacro = main.attributes.macrotext1
+ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
+assert(not main.missingText.shown and main.icon.texture == "poison:8928")
+assert(anchor.scripts.OnUpdate, "enchant events wake the idle timer")
+assert(main.attributes.macrotext1 == boundMacro)
+assert(ns.Core.frame.events.WEAPON_ENCHANT_CHANGED)
+assert(ns.Core.frame.events.WEAPON_SLOT_CHANGED)
+states[16] = { hasWeapon = true, hasEnchant = false, expirationMS = 0, charges = 0 }
+ns.Core:OnEvent("WEAPON_SLOT_CHANGED")
+assert(main.missingText.shown and not anchor.scripts.OnUpdate)
+combat = false
+
 -- Enter combat with settings already open, then drag every slider.
 combat = true
 local settings = ns.Options.frame

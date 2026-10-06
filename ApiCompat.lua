@@ -84,6 +84,36 @@ function ApiCompat:GetWeaponState(slotID)
         enchantID = nil,
     }
 
+    if C_Item and type(C_Item.GetWeaponEnchantInfo) == "function"
+        and Enum and Enum.WeaponSlot and Enum.ItemEnchantType then
+        local weaponSlot = slotID == ns.Constants.MAIN_HAND_SLOT
+            and Enum.WeaponSlot.MainHand or Enum.WeaponSlot.OffHand
+        local enchants = C_Item.GetWeaponEnchantInfo(weaponSlot)
+        local activeEnchant
+        for _, enchantInfo in pairs(enchants) do
+            if enchantInfo.hasEnchant
+                and (enchantInfo.enchantType == Enum.ItemEnchantType.Temporary
+                    or enchantInfo.enchantType == Enum.ItemEnchantType.Imbue) then
+                -- Prefer a poison when the weapon also has another imbue.
+                if ns.PoisonData:GetFamilyByEnchantID(enchantInfo.enchantID) then
+                    activeEnchant = enchantInfo
+                    break
+                end
+                if not activeEnchant or enchantInfo.enchantType == Enum.ItemEnchantType.Temporary then
+                    activeEnchant = enchantInfo
+                end
+            end
+        end
+        if activeEnchant then
+            state.hasEnchant = true
+            state.expirationMS = tonumber(activeEnchant.timeLeft) or 0
+            state.hasExpirationTime = state.expirationMS > 0
+            state.charges = tonumber(activeEnchant.charges) or 0
+            state.enchantID = tonumber(activeEnchant.enchantID)
+        end
+        return state
+    end
+
     if C_PaperDollInfo and type(C_PaperDollInfo.GetTemporaryEnchantmentInfo) == "function" then
         local enchantInfo = C_PaperDollInfo.GetTemporaryEnchantmentInfo(slotID)
         if enchantInfo then
@@ -183,9 +213,10 @@ function ApiCompat:GetBuildReport()
         version, build, date, interface = GetBuildInfo()
     end
     return string.format(
-        "version=%s build=%s date=%s interface=%s project=%s weaponEnchantAPI=%s temporaryEnchantAPI=%s",
+        "version=%s build=%s date=%s interface=%s project=%s weaponEnchantAPI=%s temporaryEnchantAPI=%s itemWeaponEnchantAPI=%s",
         tostring(version), tostring(build), tostring(date), tostring(interface),
         tostring(WOW_PROJECT_ID), tostring(type(GetWeaponEnchantInfo) == "function"),
-        tostring(C_PaperDollInfo and type(C_PaperDollInfo.GetTemporaryEnchantmentInfo) == "function")
+        tostring(C_PaperDollInfo and type(C_PaperDollInfo.GetTemporaryEnchantmentInfo) == "function"),
+        tostring(C_Item and type(C_Item.GetWeaponEnchantInfo) == "function")
     )
 end

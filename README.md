@@ -44,7 +44,7 @@ inventory and character events refresh idle buttons.
 
 ## Status
 
-SimplePoisons 0.2.2 supports Classic Era, Hardcore, and Burning Crusade Classic
+SimplePoisons 0.2.3 supports Classic Era, Hardcore, and Burning Crusade Classic
 2.5.6. TBC includes Instant Poison VII, Deadly Poison VI and VII, Wound Poison V,
 and Anesthetic Poison. The separate Forever 1.60.1 support remains beta pending
 live server testing and uses its modern temporary-enchant API. Every client

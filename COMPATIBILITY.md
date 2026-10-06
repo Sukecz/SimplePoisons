@@ -6,8 +6,13 @@ support targets client 2.5.6 (Interface 20506) and the `tbc` game type. Forever
 support begins with client 1.60.1 (Interface 16001) and uses the client's
 `camelot` game type.
 
-The addon uses `C_PaperDollInfo.GetTemporaryEnchantmentInfo()` on Forever and
-the legacy `GetWeaponEnchantInfo()` fallback on Era and TBC. Known poison
+The addon prefers `C_Item.GetWeaponEnchantInfo()` where available on current
+Forever builds, with `C_PaperDollInfo.GetTemporaryEnchantmentInfo()` for older
+Forever builds and the legacy `GetWeaponEnchantInfo()` fallback on Era and TBC.
+The current API uses `Enum.WeaponSlot` rather than inventory slot IDs; permanent
+enchants are ignored and a known poison takes priority over other imbues.
+Dedicated `WEAPON_ENCHANT_CHANGED` and `WEAPON_SLOT_CHANGED` events refresh the
+monitor even when neither button has an active timer. Known poison
 enchant IDs identify the displayed family directly, with a hidden inventory
 tooltip as a fallback. Protected macro buttons keep application user-initiated.
 

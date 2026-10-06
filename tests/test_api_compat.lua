@@ -48,6 +48,51 @@ assert(state.hasEnchant == true and state.enchantID == 323)
 assert(state.hasExpirationTime == true)
 assert(not ns.ApiCompat:GetWeaponState(17).hasEnchant)
 
+-- Current Forever exposes a list of weapon enchants. The older slot API can
+-- still exist while returning nil, and must not hide an active poison.
+Enum = {
+    WeaponSlot = { MainHand = 0, OffHand = 1 },
+    ItemEnchantType = { Permanent = 1, Temporary = 2, Imbue = 3 },
+}
+local enchants = {
+    [0] = {
+        { hasEnchant = true, enchantType = 1, timeLeft = 0, charges = 0, enchantID = 1900 },
+        { hasEnchant = true, enchantType = 3, timeLeft = 30000, charges = 0, enchantID = 999999 },
+        { hasEnchant = true, enchantType = 2, timeLeft = 123000, charges = 42, enchantID = 625 },
+    },
+    [1] = {
+        { hasEnchant = true, enchantType = 1, timeLeft = 0, charges = 0, enchantID = 1900 },
+    },
+}
+C_Item.GetWeaponEnchantInfo = function(weaponSlot)
+    assert(weaponSlot == 0 or weaponSlot == 1, "use WeaponSlot, not inventory slot 16/17")
+    return enchants[weaponSlot]
+end
+C_PaperDollInfo = { GetTemporaryEnchantmentInfo = function() return nil end }
+state = ns.ApiCompat:GetWeaponState(16)
+assert(state.hasEnchant and state.enchantID == 625,
+    "the current weapon API must detect poison even when the older API returns nil")
+assert(state.expirationMS == 123000 and state.charges == 42 and state.hasExpirationTime)
+assert(not ns.ApiCompat:GetWeaponState(17).hasEnchant, "permanent enchants are not poisons")
+enchants[1] = {
+    { hasEnchant = false, enchantType = 2, timeLeft = 0, charges = 0, enchantID = 625 },
+}
+assert(not ns.ApiCompat:GetWeaponState(17).hasEnchant, "ignore inactive enchant entries")
+enchants[1] = {
+    { hasEnchant = true, enchantType = 2, timeLeft = 60000, charges = 12, enchantID = 323 },
+}
+state = ns.ApiCompat:GetWeaponState(17)
+assert(state.hasEnchant and state.enchantID == 323 and state.expirationMS == 60000)
+enchants[0] = { enchants[0][2] }
+state = ns.ApiCompat:GetWeaponState(16)
+assert(state.hasEnchant and state.enchantID == 999999, "retain neutral non-poison monitoring")
+enchants[0] = {}
+assert(not ns.ApiCompat:GetWeaponState(16).hasEnchant,
+    "an empty current result must not resurrect stale legacy poison data")
+C_Item.GetWeaponEnchantInfo = nil
+C_PaperDollInfo = nil
+Enum = nil
+
 assert(ns.ApiCompat:DetectPoisonFamily(16, 625) == "instant")
 
 C_Item = nil

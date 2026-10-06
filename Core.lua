@@ -50,6 +50,7 @@ function Core:OnEvent(event, ...)
         ns.SecureActions:RefreshAll()
         ns.Buttons:Refresh(true)
     elseif event == "PLAYER_EQUIPMENT_CHANGED"
+        or event == "WEAPON_ENCHANT_CHANGED" or event == "WEAPON_SLOT_CHANGED"
         or (event == "UNIT_INVENTORY_CHANGED" and ... == "player") then
         ns.Buttons:Refresh(true)
     end
@@ -61,6 +62,9 @@ Core.frame:RegisterEvent("PLAYER_LOGIN")
 Core.frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 Core.frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 Core.frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+-- Older client builds may not expose the dedicated weapon events.
+pcall(Core.frame.RegisterEvent, Core.frame, "WEAPON_ENCHANT_CHANGED")
+pcall(Core.frame.RegisterEvent, Core.frame, "WEAPON_SLOT_CHANGED")
 Core.frame:RegisterEvent("BAG_UPDATE_DELAYED")
 Core.frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 Core.frame:RegisterEvent("UNIT_LEVEL")
