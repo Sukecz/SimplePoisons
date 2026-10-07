@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.4
+
+- Show the exact icon, name, and remaining time of active sharpening stones on both weapon buttons.
+- Recognize Rough, Coarse, Heavy, Solid, Dense, Elemental, Consecrated, and Blackfathom stones where available, plus Fel and Adamantite in TBC.
+- Keep stone monitoring independent of bag contents, item usability, and cached item data.
+- Keep sharpening stones monitoring-only with a neutral gray border; click assignments continue to apply poisons.
+- Add regression coverage for all ten stone types, both hands, Era/TBC/Forever API paths, combat replacement, and timer expiration.
+
+Forever support remains beta pending live rogue testing.
+
 ## 0.2.3
 
 - Refresh poison status on weapon-enchant and weapon-slot changes so an idle monitor does not remain on `MISSING` after poison application.

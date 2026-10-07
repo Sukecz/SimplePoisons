@@ -1,6 +1,7 @@
 local ns = { Constants = { MAIN_HAND_SLOT = 16 }, L = { NONE = "None" } }
 assert(loadfile("ApiCompat.lua"))("SimplePoisons", ns)
 assert(loadfile("PoisonData.lua"))("SimplePoisons", ns)
+assert(loadfile("SharpeningData.lua"))("SimplePoisons", ns)
 assert(loadfile("Buttons.lua"))("SimplePoisons", ns)
 
 local ghost = false

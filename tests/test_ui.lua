@@ -74,7 +74,7 @@ StaticPopupDialogs = {}
 SlashCmdList = {}
 
 local ns = {}
-for _, path in ipairs({ "Locales/enUS.lua", "Defaults.lua", "PoisonData.lua", "ApiCompat.lua",
+for _, path in ipairs({ "Locales/enUS.lua", "Defaults.lua", "PoisonData.lua", "SharpeningData.lua", "ApiCompat.lua",
     "Database.lua", "SecureActions.lua", "Buttons.lua", "MinimapButton.lua", "Options.lua",
     "SlashCommands.lua", "Core.lua" }) do
     assert(loadfile(path))("SimplePoisons", ns)
@@ -211,6 +211,31 @@ assert(ns.Buttons.offButton.chargeText.text == "")
 states[17].hasEnchant = false
 ns.Buttons:Refresh()
 assert(not anchor.scripts.OnUpdate)
+
+-- Stones replace the poison identity in combat without changing secure clicks.
+combat = true
+local stoneMacro = main.attributes.macrotext1
+states[16] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
+    expirationMS = 125000, charges = 0, enchantID = 1643 }
+ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
+assert(main.familyKey == nil and main.icon.texture == "poison:12404")
+assert(main.timeText.text == "3m" and main.chargeText.text == "")
+assert(not main.missingText.shown and anchor.scripts.OnUpdate)
+assert(main.attributes.macrotext1 == stoneMacro)
+ns.Buttons:ShowTooltip(main)
+tooltip = table.concat(tooltipLines, "\n")
+assert(tooltip:find("Dense Sharpening Stone", 1, true))
+assert(not tooltip:find(ns.L.UNKNOWN_ENCHANT, 1, true))
+assert(not tooltip:find(ns.L.OTHER_ENCHANT, 1, true))
+states[16].expirationMS = 5000
+anchor.scripts.OnUpdate(anchor, 0.2)
+assert(main.timeText.text == "5s" and not main.warningGlow.shown)
+states[16] = { hasWeapon = true, hasEnchant = false, expirationMS = 0, charges = 0 }
+anchor.scripts.OnUpdate(anchor, 0.2)
+assert(main.missingText.shown and main.icon.texture == "weapon:16")
+assert(not anchor.scripts.OnUpdate and main.timeText.text == "")
+assert(main.attributes.macrotext1 == stoneMacro)
+combat = false
 
 settings.textSize:SetValue(18)
 assert(main.timeText.fontSize == 18)

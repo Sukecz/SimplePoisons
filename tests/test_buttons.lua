@@ -10,6 +10,7 @@ local ns = {
     },
 }
 
+assert(loadfile("SharpeningData.lua"))("SimplePoisons", ns)
 assert(loadfile("Buttons.lua"))("SimplePoisons", ns)
 
 assert(ns.Buttons:ResolveIcon({ hasEnchant = true }, "instant", 16) == "poison:instant")

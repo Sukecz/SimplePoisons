@@ -40,6 +40,48 @@ Reference records: [Era Instant VI](https://www.wowhead.com/classic/item=8928),
 Forever API signatures and secure macro support were checked in Blizzard's
 [exported UI sources](https://github.com/Gethe/wow-ui-source/tree/forever/Interface/AddOns).
 
+## Sharpening stone catalog audit (2026-10-07)
+
+Monitoring uses `SharpeningData.lua`, independently of poison selection and
+secure application. Icons have an exact texture fallback when item data is
+uncached. Remaining time comes from the same three client API paths as poison;
+no duration is inferred from the item description. Stones retain a gray border
+and do not receive poison charge or low-time warnings.
+
+| Stone | Item ID | Enchant ID | Catalog |
+| --- | --- | --- | --- |
+| Rough | 2862 | 40 | Era / TBC / Forever |
+| Coarse | 2863 | 13 | Era / TBC / Forever |
+| Heavy | 2871 | 14 | Era / TBC / Forever |
+| Solid | 7964 | 483 | Era / TBC / Forever |
+| Dense | 12404 | 1643 | Era / TBC / Forever |
+| Elemental | 18262 | 2506 | Era / TBC / Forever |
+| Consecrated | 23122 | 2684 | Era / TBC / Forever; event availability varies |
+| Fel | 23528 | 2712 | TBC |
+| Adamantite | 23529 | 2713 | TBC |
+| Blackfathom | 211845 | 7098 | SoD data; recognized wherever the client exposes it |
+
+Item names, icons and use-spell links were checked in Wowhead's `classic`,
+`tbc` and `forever` item tooltip catalogs. Blackfathom exists in the Forever
+database too; a database record alone does not prove live server availability.
+Effect-to-enchant references:
+[Rough](https://www.wowhead.com/classic/spell=2828/sharpen-blade),
+[Coarse](https://www.wowhead.com/classic/spell=2829/sharpen-blade-ii),
+[Heavy](https://www.wowhead.com/classic/spell=2830/sharpen-blade-iii),
+[Solid](https://www.wowhead.com/classic/spell=9900/sharpen-blade-iv),
+[Dense](https://www.wowhead.com/classic/spell=16138/sharpen-blade-v),
+[Elemental](https://www.wowhead.com/classic/spell=22756/sharpen-weapon-critical),
+[Forever Elemental](https://www.wowhead.com/forever/spell=22756/sharpen-weapon-critical),
+[Consecrated](https://www.wowhead.com/classic/spell=28891/consecrated-weapon),
+[Fel](https://www.wowhead.com/tbc/spell=29452/sharpen-blade),
+[Adamantite](https://www.wowhead.com/tbc/spell=29453/sharpen-blade),
+[Blackfathom](https://www.wowhead.com/classic/spell=430392/sharpen-weapon-hit).
+
+`tests/test_sharpening.lua` covers all ten records, both hands, all three API
+shapes, client gating and uncached icons. UI tests cover combat replacement,
+tooltip identity, countdown, expiration and unchanged poison click macros.
+These are simulated checks; live client verification remains required.
+
 ## Live client checks still required
 
 Repeat on Era, TBC, and Forever with `/sp api` recorded:
@@ -50,7 +92,10 @@ Repeat on Era, TBC, and Forever with `/sp api` recorded:
    its stock in the tooltip, including after leveling up or running out.
 3. Open settings before entering combat; try every slider. Confirm values
    stay unchanged, and bag changes refresh click assignments after combat.
-4. Apply an oil or sharpening stone; verify the neutral weapon icon and border.
+4. Apply a sharpening stone to each hand; verify its exact icon, name, gray
+   border and remaining time, including in combat, with empty bags and after
+   relog. Replace it with poison and let it expire; check identity and missing
+   state. Unrecognized enchants and oils retain the neutral weapon icon.
 5. Start with no poison, apply one, and let it expire or exhaust its charges;
    verify the timer wakes up and the missing state returns. Check TBC without
    charge warnings and Forever with the client's current charge counts.

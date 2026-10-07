@@ -2,7 +2,7 @@
 ## Title: SimplePoisons
 ## Notes: Two compact buttons for monitoring and applying Rogue poisons.
 ## Author: SimplePoisons Authors
-## Version: 0.2.3
+## Version: 0.2.4
 ## X-Curse-Project-ID: 1660559
 ## SavedVariablesPerCharacter: SimplePoisonsDB
 ## X-Flavor: TBC
@@ -12,6 +12,7 @@
 Locales\enUS.lua
 Defaults.lua
 PoisonData.lua
+SharpeningData.lua
 ApiCompat.lua
 Database.lua
 SecureActions.lua

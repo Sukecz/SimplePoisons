@@ -31,6 +31,7 @@ SimplePoisons automatically uses the highest available rank of the selected pois
 - A neutral green border means the weapon poison is healthy.
 - An orange border means its duration or charges are running low.
 - A red border and `MISSING` mean the weapon has no temporary enchant.
+- Active sharpening stones show their own icon, name, and remaining time with a neutral gray border. Stone detection does not add stone application; clicks still apply poisons.
 - The default warning thresholds are below 3 minutes or below 10 charges.
 - Both warning thresholds are fully configurable.
 

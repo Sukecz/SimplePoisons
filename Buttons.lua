@@ -286,6 +286,10 @@ function Buttons:ResolveIcon(state, familyKey, slotID)
         if familyKey then
             return ns.PoisonData:GetRepresentativeIcon(familyKey, state.enchantID)
         end
+        local stone = ns.SharpeningData:GetByEnchantID(state.enchantID)
+        if stone then
+            return ns.SharpeningData:GetIcon(stone)
+        end
         return ns.ApiCompat:GetWeaponTexture(slotID)
             or "Interface\\Icons\\INV_Misc_QuestionMark"
     end
@@ -304,7 +308,9 @@ function Buttons:RefreshButton(button)
         if enchantChanged then
             button.cachedFamily = nil
         end
-        button.cachedFamily = ns.ApiCompat:DetectPoisonFamily(button.slotID, state.enchantID)
+        -- Known stones must not be mistaken for poison by a tooltip fallback.
+        button.cachedFamily = not ns.SharpeningData:GetByEnchantID(state.enchantID)
+            and ns.ApiCompat:DetectPoisonFamily(button.slotID, state.enchantID) or nil
         button.nextIdentityScan = now + 2
     end
     button.lastHadEnchant = state.hasEnchant
@@ -393,9 +399,11 @@ function Buttons:ShowTooltip(button)
     GameTooltip:SetText(button.slotID == C.MAIN_HAND_SLOT and ns.L.MAIN_HAND or ns.L.OFF_HAND, 1, 0.82, 0)
     local state = button.state or ns.ApiCompat:GetWeaponState(button.slotID)
     if state.hasEnchant then
-        local activeName = button.familyKey and ns.PoisonData:GetLabel(button.familyKey) or ns.L.UNKNOWN_ENCHANT
+        local stone = ns.SharpeningData:GetByEnchantID(state.enchantID)
+        local activeName = button.familyKey and ns.PoisonData:GetLabel(button.familyKey)
+            or (stone and stone.label) or ns.L.UNKNOWN_ENCHANT
         GameTooltip:AddLine(string.format(ns.L.ACTIVE, activeName), 1, 1, 1)
-        if not button.familyKey then
+        if not button.familyKey and not stone then
             GameTooltip:AddLine(ns.L.OTHER_ENCHANT, 0.8, 0.8, 0.8, true)
         end
         GameTooltip:AddLine(state.hasExpirationTime
