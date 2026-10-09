@@ -117,7 +117,7 @@ function PoisonData:GetAvailableItem(key)
     local itemIDs = self:GetItemIDs(key)
     for index = #itemIDs, 1, -1 do
         local itemID = itemIDs[index]
-        if ns.ApiCompat:GetItemCount(itemID) > 0 and ns.ApiCompat:IsItemUsable(itemID) then
+        if ns.ApiCompat:GetItemCount(itemID) > 0 and ns.ApiCompat:CanUsePoisonRank(itemID) then
             return itemID
         end
     end

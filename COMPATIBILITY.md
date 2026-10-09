@@ -21,6 +21,15 @@ client as verified. Static tests and file deployment do not prove live secure
 click behavior, poison replacement confirmation behavior, or rendered
 geometry. Forever is beta software and its API or poison data can still change.
 
+Rank selection uses bag stock, Rogue class and the cached `itemMinLevel` from
+`C_Item.GetItemInfo()` or legacy `GetItemInfo()`. It does not gate secure macros
+on the transient `IsUsableItem()` result. With uncached metadata, the highest
+owned rank stays bound and Blizzard validates the hardware click. Both
+`GET_ITEM_INFO_RECEIVED` and `ITEM_DATA_LOAD_RESULT` refresh assignments;
+combat delays secure changes until `PLAYER_REGEN_ENABLED`. The modern item
+signature and load event are documented in Blizzard's
+[exported Classic API source](https://github.com/Gethe/wow-ui-source/blob/classic/Interface/AddOns/Blizzard_APIDocumentationGenerated/ItemDocumentation.lua).
+
 ## Poison catalog audit (2026-09-19)
 
 All 20 Era/Forever items and their enchant IDs, and all 25 TBC items and their
@@ -99,3 +108,6 @@ Repeat on Era, TBC, and Forever with `/sp api` recorded:
 5. Start with no poison, apply one, and let it expire or exhaust its charges;
    verify the timer wakes up and the missing state returns. Check TBC without
    charge warnings and Forever with the client's current charge counts.
+6. Log in or reload with poisons already in bags, including after death and
+   while item data is loading. Verify click assignments remain present, work
+   after revival, and update too-high-level ranks when metadata arrives.

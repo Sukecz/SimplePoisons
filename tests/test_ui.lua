@@ -84,7 +84,18 @@ local states = {
     [17] = { hasWeapon = true, hasEnchant = false, expirationMS = 0, charges = 0 },
 }
 local counts = { [8927] = 3, [8928] = 2 }
-local usable = { [8927] = true, [8928] = true }
+local playerLevel = 60
+local itemLevels = { [8927] = 44, [8928] = 52 }
+local itemDataLoaded = false
+UnitLevel = function() return playerLevel end
+GetItemInfo = function(id)
+    if itemDataLoaded then
+        return "item:" .. id, nil, nil, nil, itemLevels[id] or 20
+    end
+end
+-- The client can report every poison unusable during login or while dead.
+IsUsableItem = function() return false end
+C_Item = { IsUsableItem = function() return false end }
 local reads = 0
 ns.ApiCompat.IsCombatLocked = function() return combat end
 ns.ApiCompat.IsRogue = function() return true end
@@ -92,7 +103,6 @@ ns.ApiCompat.GetWeaponState = function(_, slot) reads = reads + 1; return states
 ns.ApiCompat.GetWeaponTexture = function(_, slot) return "weapon:" .. slot end
 ns.ApiCompat.DetectPoisonFamily = function(_, _, enchant) return ns.PoisonData:GetFamilyByEnchantID(enchant) end
 ns.ApiCompat.GetItemCount = function(_, id) return counts[id] or 0 end
-ns.ApiCompat.IsItemUsable = function(_, id) return usable[id] end
 ns.ApiCompat.GetItemIcon = function(_, id) return "poison:" .. id end
 ns.ApiCompat.GetItemName = function(_, id) return id == 8928 and "Instant Poison VI" or nil end
 ns.ApiCompat.RequestItemData = function() end
@@ -103,6 +113,22 @@ local main = ns.Buttons.mainButton
 local anchor = ns.Buttons.anchor
 assert(not anchor.scripts.OnUpdate and not ns.Core.frame.scripts.OnUpdate, "idle means no polling")
 assert(main.missingText.shown)
+assert(main.availableItems.LeftButton == 8928,
+    "cold item data and transient unusability must not remove the owned poison")
+assert(main.attributes.macrotext1 == "/use item:8928\n/use 16")
+assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:8928\n/use 17")
+for _, family in ipairs({ "instant", "deadly", "crippling", "wound", "mindNumbing" }) do
+    local ids = ns.PoisonData:GetItemIDs(family)
+    local id = ids[#ids]
+    counts[id] = 2
+    assert(ns.PoisonData:GetAvailableItem(family) == id,
+        "all owned Era poison families stay selectable before item data arrives")
+    if family ~= "instant" then counts[id] = nil end
+end
+itemDataLoaded = true
+ns.Core:OnEvent("ITEM_DATA_LOAD_RESULT", 8928, true)
+assert(ns.Core.frame.events.ITEM_DATA_LOAD_RESULT)
+assert(main.availableItems.LeftButton == 8928)
 
 -- A completed poison application can emit only the dedicated enchant event.
 -- It must wake an idle monitor, including in combat, without changing clicks.
@@ -162,12 +188,34 @@ assert(main.attributes.macrotext1 == "/use item:8927\n/use 16")
 ns.Buttons:ShowTooltip(main)
 assert(table.concat(tooltipLines, "\n"):find("Instant Poison (Rank 5) (3 in bags)", 1, true))
 counts[8928] = 2
-usable[8928] = false
+playerLevel = 51
 ns.Core:OnEvent("BAG_UPDATE_DELAYED")
 assert(main.availableItems.LeftButton == 8927)
-usable[8928] = true
+playerLevel = 52
 ns.Core:OnEvent("UNIT_LEVEL", "player")
 assert(main.availableItems.LeftButton == 8928, "level unlock rebuilds the secure click")
+
+-- Delayed metadata corrects the chosen rank without waiting for a bag event.
+playerLevel = 51
+itemDataLoaded = false
+ns.Core:OnEvent("PLAYER_ENTERING_WORLD")
+assert(main.availableItems.LeftButton == 8928)
+itemDataLoaded = true
+ns.Core:OnEvent("ITEM_DATA_LOAD_RESULT", 8928, true)
+assert(main.availableItems.LeftButton == 8927)
+assert(main.attributes.macrotext1 == "/use item:8927\n/use 16")
+assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:8927\n/use 17")
+playerLevel = 60
+ns.Core:OnEvent("UNIT_LEVEL", "player")
+combat = true
+playerLevel = 51
+ns.Core:OnEvent("ITEM_DATA_LOAD_RESULT", 8928, true)
+assert(main.availableItems.LeftButton == 8928 and ns.SecureActions.refreshPending)
+combat = false
+ns.Core:OnEvent("PLAYER_REGEN_ENABLED")
+assert(main.availableItems.LeftButton == 8927)
+playerLevel = 60
+ns.Core:OnEvent("UNIT_LEVEL", "player")
 
 -- Inventory events wake the timer; no ticker remains after expiration.
 states[16] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
@@ -241,4 +289,42 @@ settings.textSize:SetValue(18)
 assert(main.timeText.fontSize == 18)
 StaticPopupDialogs.SIMPLEPOISONS_CONFIRM_RESET.OnAccept()
 assert(main.timeText.fontSize == 13)
+
+-- Every supported client's families retain both-hand macros with a cold cache
+-- and false usability, and after item-data completion or revival.
+WOW_PROJECT_BURNING_CRUSADE_CLASSIC = 5
+playerLevel = 70
+local clients = {
+    { name = "Era/Hardcore", project = 2, modern = false },
+    { name = "TBC", project = 5, modern = true },
+    { name = "Forever", project = 99, modern = true },
+}
+for _, client in ipairs(clients) do
+    WOW_PROJECT_ID = client.project
+    C_Item.GetItemInfo = client.modern and GetItemInfo or nil
+    for _, option in ipairs(ns.PoisonData:GetOptions()) do
+        local ids = ns.PoisonData:GetItemIDs(option.value)
+        local id = ids[#ids]
+        counts[id] = 2
+        ns.Database:SetClick("LeftButton", option.value)
+        ns.Database:SetClick("RightButton", option.value)
+        ns.Database:SetClick("MiddleButton", option.value)
+        itemDataLoaded = false
+        ns.Core:OnEvent("PLAYER_ENTERING_WORLD")
+        for _, event in ipairs({ "ITEM_DATA_LOAD_RESULT", "GET_ITEM_INFO_RECEIVED", "PLAYER_ALIVE" }) do
+            for _, button in ipairs({ main, ns.Buttons.offButton }) do
+                for suffix = 1, 3 do
+                    assert(button.attributes["macrotext" .. suffix]
+                        == string.format("/use item:%d\n/use %d", id, button.slotID),
+                        client.name .. " " .. option.value .. " must retain every hardware-click macro")
+                end
+            end
+            itemDataLoaded = true
+            ns.Core:OnEvent(event, id, true)
+        end
+    end
+end
+assert(not anchor.scripts.OnUpdate and not ns.Core.frame.scripts.OnUpdate,
+    "rank readiness must not add idle polling")
+print("Rank readiness: Era/Hardcore, TBC, Forever, all families and clicks, both hands passed")
 print("UI combat, tooltip, rank refresh, enchant state, and timer lifecycle tests passed")

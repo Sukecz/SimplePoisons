@@ -101,15 +101,29 @@ GetItemInfo = function(itemID) fallbackRequested = itemID end
 ns.ApiCompat:RequestItemData(9187)
 assert(fallbackRequested == 9187)
 
-IsUsableItem = function(itemID) return itemID == 6947, false end
-assert(ns.ApiCompat:IsItemUsable(6947))
-assert(not ns.ApiCompat:IsItemUsable(8928))
-C_Item = { IsUsableItem = function(itemID) return itemID == 8928, false end }
-assert(ns.ApiCompat:IsItemUsable(8928))
-assert(not ns.ApiCompat:IsItemUsable(6947), "prefer the modern API")
+UnitClass = function() return "Rogue", "ROGUE" end
+local level = 51
+UnitLevel = function(unit) assert(unit == "player"); return level end
+IsUsableItem = function() error("transient usability must not gate poison macros") end
+C_Item = { IsUsableItem = IsUsableItem }
+assert(ns.ApiCompat:CanUsePoisonRank(8928), "uncached data keeps the owned rank bound")
+GetItemInfo = function() return "Instant Poison VI", nil, nil, 60, 52 end
+assert(not ns.ApiCompat:CanUsePoisonRank(8928), "skip a rank above the player's level")
+level = 52
+assert(ns.ApiCompat:CanUsePoisonRank(8928), "use minimum level, not item level")
+C_Item.GetItemInfo = function() return "Instant Poison VI", nil, nil, 60, 53 end
+assert(not ns.ApiCompat:CanUsePoisonRank(8928), "prefer modern item metadata")
+C_Item.GetItemInfo = function() return nil end
+assert(ns.ApiCompat:CanUsePoisonRank(8928), "modern cold cache must not disable clicks")
+UnitClass = function() return "Warrior", "WARRIOR" end
+assert(not ns.ApiCompat:CanUsePoisonRank(8928), "only Rogues can use poisons")
+UnitClass = function() return "Rogue", "ROGUE" end
 C_Item = nil
-IsUsableItem = nil
-assert(not ns.ApiCompat:IsItemUsable(6947), "do not assume unknown usability")
+level = -1
+assert(ns.ApiCompat:CanUsePoisonRank(8928), "unknown login level keeps the macro")
+UnitLevel = nil
+GetItemInfo = nil
+assert(ns.ApiCompat:CanUsePoisonRank(8928), "missing metadata API keeps Blizzard validation")
 WOW_PROJECT_BURNING_CRUSADE_CLASSIC = 5
 WOW_PROJECT_ID = 5
 assert(ns.ApiCompat:IsTBC())

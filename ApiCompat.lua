@@ -30,14 +30,24 @@ function ApiCompat:GetItemCount(itemID)
     return 0
 end
 
-function ApiCompat:IsItemUsable(itemID)
-    if C_Item and type(C_Item.IsUsableItem) == "function" then
-        return C_Item.IsUsableItem(itemID) and true or false
+function ApiCompat:CanUsePoisonRank(itemID)
+    if not self:IsRogue() then
+        return false
     end
-    if type(IsUsableItem) == "function" then
-        return IsUsableItem(itemID) and true or false
+
+    local requiredLevel
+    if C_Item and type(C_Item.GetItemInfo) == "function" then
+        requiredLevel = select(5, C_Item.GetItemInfo(itemID))
+    elseif type(GetItemInfo) == "function" then
+        requiredLevel = select(5, GetItemInfo(itemID))
     end
-    return false
+    local playerLevel = type(UnitLevel) == "function" and tonumber(UnitLevel("player"))
+    requiredLevel = tonumber(requiredLevel)
+    -- IsUsableItem describes the current player state, not rank eligibility.
+    -- Keep the hardware-click macro while dead or while item data is loading;
+    -- Blizzard validates the actual use. Item-data events refine the rank.
+    return not requiredLevel or not playerLevel or playerLevel <= 0
+        or playerLevel >= requiredLevel
 end
 
 function ApiCompat:GetItemIcon(itemID)

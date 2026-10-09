@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.5
+
+- Fix intermittent `no usable rank` and missing poison click actions when the client temporarily reports owned poisons unusable.
+- Select ranks by bag stock, Rogue class, and cached minimum level instead of current item usability. Keep the highest owned rank bound while metadata loads, with Blizzard validating the actual click.
+- Refresh rank assignments on item-data completion and retain combat deferral without adding polling.
+- Add regression coverage for every supported client's poison families and all three clicks, cold item data, level restrictions, both hands, and item-data completion during combat.
+
+This shared application fix covers Classic Era/Hardcore, Burning Crusade Classic, and WoW Forever beta. Forever support remains beta pending live rogue testing.
+
 ## 0.2.4
 
 - Show the exact icon, name, and remaining time of active sharpening stones on both weapon buttons.

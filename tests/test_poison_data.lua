@@ -4,7 +4,7 @@ local requested = {}
 
 ns.L = { NONE = "None" }
 ns.ApiCompat = {
-    IsItemUsable = function() return true end,
+    CanUsePoisonRank = function() return true end,
     GetItemName = function() return nil end,
     GetItemCount = function(_, itemID) return counts[itemID] or 0 end,
     GetItemIcon = function(_, itemID) return "icon:" .. itemID end,
@@ -80,12 +80,12 @@ end
 ns.isTBC = true
 
 counts[21927] = 10
-ns.ApiCompat.IsItemUsable = function(_, itemID) return itemID ~= 21927 and itemID ~= 8928 end
+ns.ApiCompat.CanUsePoisonRank = function(_, itemID) return itemID ~= 21927 and itemID ~= 8928 end
 assert(ns.PoisonData:GetAvailableItem("instant") == 8927, "skip unusable higher ranks")
 assert(ns.PoisonData:GetStock("instant") == 15, "total stock includes unusable items")
-ns.ApiCompat.IsItemUsable = function() return false end
+ns.ApiCompat.CanUsePoisonRank = function() return false end
 assert(ns.PoisonData:GetAvailableItem("instant") == nil)
-ns.ApiCompat.IsItemUsable = function() return true end
+ns.ApiCompat.CanUsePoisonRank = function() return true end
 assert(ns.PoisonData:GetAvailableItem("instant") == 21927, "rank unlock is reflected")
 counts[21927] = 0
 assert(ns.PoisonData:GetAvailableItem("instant") == 8928, "fall back after rank runs out")
@@ -98,7 +98,7 @@ ns.ApiCompat.GetItemName = function() return "Localized Instant Poison VI" end
 assert(ns.PoisonData:GetItemLabel("instant", 8928) == "Localized Instant Poison VI")
 
 -- Ghost usability must not change either the applied-rank icon or fallback.
-ns.ApiCompat.IsItemUsable = function() return false end
+ns.ApiCompat.CanUsePoisonRank = function() return false end
 assert(ns.PoisonData:GetRepresentativeIcon("instant", 324) == "icon:6949")
 assert(ns.PoisonData:GetRepresentativeIcon("crippling", 22) == "icon:3775")
 assert(ns.PoisonData:GetRepresentativeIcon("crippling") == "icon:3775")

@@ -44,6 +44,7 @@ function Core:OnEvent(event, ...)
             ns.Options:Refresh()
         end
     elseif event == "BAG_UPDATE_DELAYED" or event == "GET_ITEM_INFO_RECEIVED"
+        or event == "ITEM_DATA_LOAD_RESULT"
         or event == "SKILL_LINES_CHANGED" or event == "SPELLS_CHANGED"
         or event == "PLAYER_ALIVE" or event == "PLAYER_ENTERING_WORLD"
         or (event == "UNIT_LEVEL" and ... == "player") then
@@ -67,6 +68,7 @@ pcall(Core.frame.RegisterEvent, Core.frame, "WEAPON_ENCHANT_CHANGED")
 pcall(Core.frame.RegisterEvent, Core.frame, "WEAPON_SLOT_CHANGED")
 Core.frame:RegisterEvent("BAG_UPDATE_DELAYED")
 Core.frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+pcall(Core.frame.RegisterEvent, Core.frame, "ITEM_DATA_LOAD_RESULT")
 Core.frame:RegisterEvent("UNIT_LEVEL")
 Core.frame:RegisterEvent("SKILL_LINES_CHANGED")
 Core.frame:RegisterEvent("SPELLS_CHANGED")

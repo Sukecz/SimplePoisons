@@ -20,8 +20,11 @@ It keeps everything on two buttons:
 - left, right, and middle click apply three configurable poison families.
 - a small gear on the pair and an optional `SP` minimap button open settings.
 
-The addon automatically selects the highest usable rank of the configured
-poison family from the player's bags. Each click's tooltip shows the exact
+The addon automatically selects the highest owned rank of the configured
+poison family that meets the Rogue's level requirement. While item data is
+loading, the highest owned rank stays bound and Blizzard validates its use;
+the selection updates when the data arrives. Temporary unusability, including
+death, does not remove click assignments. Each click's tooltip shows the exact
 bound rank and its own stock, including assignments waiting for a combat refresh.
 
 The default low warning appears below 3 minutes or below 10 charges. Both
@@ -50,7 +53,7 @@ inventory and character events refresh idle buttons.
 
 ## Status
 
-SimplePoisons 0.2.4 supports Classic Era, Hardcore, and Burning Crusade Classic
+SimplePoisons 0.2.5 supports Classic Era, Hardcore, and Burning Crusade Classic
 2.5.6. TBC includes Instant Poison VII, Deadly Poison VI and VII, Wound Poison V,
 and Anesthetic Poison. The separate Forever 1.60.1 support remains beta pending
 live server testing and uses its modern temporary-enchant API. Every client
