@@ -223,6 +223,20 @@ function Options:Create()
             ns.MinimapButton:RefreshVisibility()
         end)
 
+    frame.showSettingsIcon = createCheckButton(frame, ns.L.SHOW_SETTINGS_ICON, -660,
+        function() return ns.Database:Get("showSettingsIcon") end,
+        function(value)
+            if ns.ApiCompat:IsCombatLocked() then
+                frame.showSettingsIcon:Refresh()
+                ns.Core:Print(ns.L.COMBAT_LOCKED)
+                return
+            end
+            ns.Database:Set("showSettingsIcon", value)
+            ns.Buttons:ApplyLayout()
+        end)
+    frame.showSettingsIcon:ClearAllPoints()
+    frame.showSettingsIcon:SetPoint("TOPLEFT", 280, -660)
+
     frame.move = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     frame.move:SetSize(112, 24)
     frame.move:SetPoint("BOTTOMLEFT", 18, 18)
@@ -284,6 +298,7 @@ function Options:Refresh()
     self.frame.scale:Refresh()
     self.frame.textSize:Refresh()
     self.frame.showMinimap:Refresh()
+    self.frame.showSettingsIcon:Refresh()
     self.frame.move:SetText(ns.Buttons.unlocked and ns.L.LOCK or ns.L.UNLOCK)
 end
 

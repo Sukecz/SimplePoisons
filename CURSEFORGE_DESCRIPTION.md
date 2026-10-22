@@ -41,7 +41,7 @@ SimplePoisons automatically uses the highest available rank of the selected pois
 - Choose horizontal or vertical button layout.
 - Adjust the scale.
 - Move and lock the paired buttons.
-- Open settings from the small gear, the optional draggable green `SP` minimap button, or `/sp`.
+- Open settings from the small gear, the optional draggable green `SP` minimap button, or `/sp`. Hide the gear independently with the "Show settings icon" option.
 - No external libraries or dependencies.
 
 ## Commands

@@ -111,6 +111,26 @@ ns.Core:OnEvent("ADDON_LOADED", "SimplePoisons")
 ns.Options:Open()
 local main = ns.Buttons.mainButton
 local anchor = ns.Buttons.anchor
+local settings = ns.Options.frame
+local gear = ns.Buttons.settingsButton
+assert(gear:IsShown() and settings.showSettingsIcon:GetChecked())
+settings.showSettingsIcon:SetChecked(false)
+settings.showSettingsIcon.scripts.OnClick(settings.showSettingsIcon)
+assert(not gear:IsShown() and not ns.Database:Get("showSettingsIcon"))
+assert(ns.Database:Get("showMinimap"), "hiding the gear preserves the minimap preference")
+settings:Hide()
+ns.SlashCommands:Handle("")
+assert(settings:IsShown() and not settings.showSettingsIcon:GetChecked(),
+    "/sp must still open settings with the gear hidden")
+combat = true
+settings.showSettingsIcon:SetChecked(true)
+settings.showSettingsIcon.scripts.OnClick(settings.showSettingsIcon)
+assert(not gear:IsShown() and not ns.Database:Get("showSettingsIcon"))
+assert(not settings.showSettingsIcon:GetChecked(), "combat reverts the checkbox")
+combat = false
+settings.showSettingsIcon:SetChecked(true)
+settings.showSettingsIcon.scripts.OnClick(settings.showSettingsIcon)
+assert(gear:IsShown() and ns.Database:Get("showSettingsIcon"))
 assert(not anchor.scripts.OnUpdate and not ns.Core.frame.scripts.OnUpdate, "idle means no polling")
 assert(main.missingText.shown)
 assert(main.availableItems.LeftButton == 8928,
@@ -149,7 +169,6 @@ combat = false
 
 -- Enter combat with settings already open, then drag every slider.
 combat = true
-local settings = ns.Options.frame
 for _, entry in ipairs({
     { settings.scale, "scale", 1.4 }, { settings.textSize, "textSize", 18 },
     { settings.lowTime, "lowMinutes", 8 }, { settings.lowCharges, "lowCharges", 30 },
@@ -287,8 +306,11 @@ combat = false
 
 settings.textSize:SetValue(18)
 assert(main.timeText.fontSize == 18)
+settings.showSettingsIcon:SetChecked(false)
+settings.showSettingsIcon.scripts.OnClick(settings.showSettingsIcon)
 StaticPopupDialogs.SIMPLEPOISONS_CONFIRM_RESET.OnAccept()
 assert(main.timeText.fontSize == 13)
+assert(gear:IsShown() and settings.showSettingsIcon:GetChecked(), "reset restores the gear")
 
 -- Every supported client's families retain both-hand macros with a cold cache
 -- and false usability, and after item-data completion or revival.

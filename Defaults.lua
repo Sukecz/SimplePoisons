@@ -24,6 +24,7 @@ ns.Defaults = {
     textSize = 13,
     orientation = "HORIZONTAL",
     showMinimap = true,
+    showSettingsIcon = true,
     minimapAngle = 225,
     position = {
         point = "CENTER",

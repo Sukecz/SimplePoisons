@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.6
+
+- Add a per-character "Show settings icon" option to hide the small gear beside the weapon buttons.
+- Keep the gear visible by default and control it independently of the minimap button. Settings remain accessible through `/sp`.
+
+Forever support remains beta pending live rogue testing.
+
 ## 0.2.5
 
 - Fix intermittent `no usable rank` and missing poison click actions when the client temporarily reports owned poisons unusable.

@@ -18,7 +18,8 @@ It keeps everything on two buttons:
 - a gray border and weapon icon indicate an unidentified or other temporary enchant;
 - active sharpening stones show their own icon and remaining time with a gray border;
 - left, right, and middle click apply three configurable poison families.
-- a small gear on the pair and an optional `SP` minimap button open settings.
+- a small gear on the pair and an optional `SP` minimap button open settings;
+  both can be hidden independently in settings. `/sp` always opens settings.
 
 The addon automatically selects the highest owned rank of the configured
 poison family that meets the Rogue's level requirement. While item data is
@@ -53,7 +54,7 @@ inventory and character events refresh idle buttons.
 
 ## Status
 
-SimplePoisons 0.2.5 supports Classic Era, Hardcore, and Burning Crusade Classic
+SimplePoisons 0.2.6 supports Classic Era, Hardcore, and Burning Crusade Classic
 2.5.6. TBC includes Instant Poison VII, Deadly Poison VI and VII, Wound Poison V,
 and Anesthetic Poison. The separate Forever 1.60.1 support remains beta pending
 live server testing and uses its modern temporary-enchant API. Every client

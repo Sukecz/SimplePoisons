@@ -35,6 +35,7 @@ ns.L = {
     SCALE = "Scale",
     TEXT_SIZE = "Text size",
     SHOW_MINIMAP = "Show minimap button",
+    SHOW_SETTINGS_ICON = "Show settings icon",
     MINIMAP_TOOLTIP = "Left-click to open settings. Drag to move around the minimap.",
     UNLOCK = "Move Buttons",
     LOCK = "Save Position",

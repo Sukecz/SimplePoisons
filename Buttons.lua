@@ -213,6 +213,11 @@ function Buttons:ApplyLayout()
     self.moveControls:SetPoint("TOP", self.anchor, "BOTTOM", 0, -(textSize + 8))
     self.settingsButton:ClearAllPoints()
     self.settingsButton:SetPoint("LEFT", self.anchor, "RIGHT", 4, 0)
+    if ns.Database:Get("showSettingsIcon") then
+        self.settingsButton:Show()
+    else
+        self.settingsButton:Hide()
+    end
     if ns.Database:Get("orientation") == "VERTICAL" then
         local verticalGap = (textSize * 2) + 7
         self.anchor:SetSize(size, (size * 2) + verticalGap)

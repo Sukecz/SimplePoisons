@@ -36,6 +36,7 @@ function Database:Initialize(saved)
         textSize = clamp(saved.textSize, ns.Ranges.textSize, defaults.textSize),
         orientation = saved.orientation == "VERTICAL" and "VERTICAL" or "HORIZONTAL",
         showMinimap = saved.showMinimap ~= false,
+        showSettingsIcon = saved.showSettingsIcon ~= false,
         minimapAngle = math.max(0, math.min(359, tonumber(saved.minimapAngle) or defaults.minimapAngle)),
         position = {
             point = VALID_POINTS[position.point] and position.point or defaults.position.point,
@@ -67,7 +68,7 @@ function Database:Set(key, value)
         value = clamp(value, ns.Ranges.textSize, ns.Defaults.textSize)
     elseif key == "orientation" then
         value = value == "VERTICAL" and "VERTICAL" or "HORIZONTAL"
-    elseif key == "showMinimap" then
+    elseif key == "showMinimap" or key == "showSettingsIcon" then
         value = value and true or false
     elseif key == "minimapAngle" then
         value = math.max(0, math.min(359, tonumber(value) or ns.Defaults.minimapAngle))
