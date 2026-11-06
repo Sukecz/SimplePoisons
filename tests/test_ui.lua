@@ -15,7 +15,7 @@ function methods:UnregisterEvent(event) self.events[event] = nil end
 function methods:SetPoint(...) protectedChange(self); self.point = { ... } end
 function methods:GetPoint() return "CENTER", UIParent, "CENTER", 0, 0 end
 function methods:ClearAllPoints() protectedChange(self) end
-function methods:SetSize() protectedChange(self) end
+function methods:SetSize(width, height) protectedChange(self); self.width, self.height = width, height end
 function methods:SetScale() protectedChange(self) end
 function methods:Show() protectedChange(self); self.shown = true end
 function methods:Hide()
@@ -40,12 +40,16 @@ function methods:SetAttribute(key, value)
     self.attributes = self.attributes or {}
     self.attributes[key] = value
 end
-function methods:CreateTexture() return widget() end
+function methods:CreateTexture(name, layer)
+    local texture = widget(name)
+    texture.layer = layer
+    return texture
+end
 function methods:CreateFontString() return widget() end
 function methods:GetHighlightTexture() return widget() end
 for _, name in ipairs({
     "SetMovable", "SetClampedToScreen", "RegisterForClicks", "RegisterForDrag", "EnableMouse",
-    "SetFrameStrata", "SetNormalTexture", "SetHighlightTexture", "SetAlpha", "SetTexCoord",
+    "SetFrameStrata", "SetFrameLevel", "SetNormalTexture", "SetHighlightTexture", "SetAlpha", "SetTexCoord",
     "SetBlendMode", "SetColorTexture", "SetVertexColor", "SetTextColor", "SetJustifyH",
     "SetShadowOffset", "SetBackdrop", "SetBackdropColor", "SetDesaturated", "SetWidth",
     "SetHeight", "SetMinMaxValues", "SetValueStep", "SetObeyStepOnDrag", "StartMoving",
@@ -53,6 +57,7 @@ for _, name in ipairs({
 }) do methods[name] = function() end end
 
 UIParent = widget()
+Minimap = widget()
 BackdropTemplateMixin = {}
 CreateFrame = function(_, name, parent, template)
     local frame = widget(name)
@@ -69,13 +74,16 @@ end
 UIDropDownMenu_SetWidth = function() end
 UIDropDownMenu_SetSelectedValue = function() end
 UIDropDownMenu_SetText = function() end
-UIDropDownMenu_Initialize = function() end
+UIDropDownMenu_Initialize = function(frame, initialize) frame.initialize = initialize end
+UIDropDownMenu_CreateInfo = function() return {} end
+local menuItems
+UIDropDownMenu_AddButton = function(info) menuItems[#menuItems + 1] = info end
 StaticPopupDialogs = {}
 SlashCmdList = {}
 
 local ns = {}
 for _, path in ipairs({ "Locales/enUS.lua", "Defaults.lua", "PoisonData.lua", "SharpeningData.lua", "ApiCompat.lua",
-    "Database.lua", "SecureActions.lua", "Buttons.lua", "MinimapButton.lua", "Options.lua",
+    "ApplicationData.lua", "Database.lua", "SecureActions.lua", "Buttons.lua", "MinimapButton.lua", "Options.lua",
     "SlashCommands.lua", "Core.lua" }) do
     assert(loadfile(path))("SimplePoisons", ns)
 end
@@ -113,6 +121,14 @@ local main = ns.Buttons.mainButton
 local anchor = ns.Buttons.anchor
 local settings = ns.Options.frame
 local gear = ns.Buttons.settingsButton
+local minimap = ns.MinimapButton.button
+local layers = { BACKGROUND = 0, BORDER = 1, ARTWORK = 2, OVERLAY = 3, HIGHLIGHT = 4 }
+assert(minimap and minimap:IsShown())
+assert(_G.SimplePoisonsMinimapButtonIcon == minimap.icon, "collectors can resolve the named icon")
+assert(layers[minimap.background.layer] < layers[minimap.icon.layer])
+assert(layers[minimap.border.layer] < layers[minimap.icon.layer],
+    "even an opaque stock border must not cover the custom minimap logo")
+assert(minimap.icon.texture == "Interface\\AddOns\\SimplePoisons\\assets\\minimap-icon.tga")
 assert(gear:IsShown() and settings.showSettingsIcon:GetChecked())
 settings.showSettingsIcon:SetChecked(false)
 settings.showSettingsIcon.scripts.OnClick(settings.showSettingsIcon)
@@ -350,3 +366,142 @@ assert(not anchor.scripts.OnUpdate and not ns.Core.frame.scripts.OnUpdate,
     "rank readiness must not add idle polling")
 print("Rank readiness: Era/Hardcore, TBC, Forever, all families and clicks, both hands passed")
 print("UI combat, tooltip, rank refresh, enchant state, and timer lifecycle tests passed")
+
+-- Exercise the real dropdown callbacks, persisted one-hand layout and combat guard.
+local function selectOption(dropdown, value)
+    menuItems = {}
+    dropdown.initialize()
+    for _, item in ipairs(menuItems) do
+        if item.value == value then item.func(); return end
+    end
+    error("Missing menu option: " .. value)
+end
+ns.ApiCompat.IsRogue = function() return false end
+WOW_PROJECT_CAMELOT = 18
+WOW_PROJECT_ID = 18
+counts[12404] = 5
+selectOption(settings.leftClick, "stone:1643")
+assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
+assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:12404\n/use 17")
+ns.Database:Set("orientation", "VERTICAL")
+selectOption(settings.hands, "MAIN")
+assert(main:IsShown() and not ns.Buttons.offButton:IsShown())
+assert(anchor.width == 48 and anchor.height == 48)
+assert(ns.Database:Initialize(SimplePoisonsDB).hands == "MAIN")
+assert(ns.Database:GetClick("LeftButton") == "stone:1643")
+selectOption(settings.hands, "OFF")
+assert(not main:IsShown() and ns.Buttons.offButton:IsShown())
+assert(anchor.width == 48 and anchor.height == 48)
+assert(ns.Buttons.offButton.point[1] == "CENTER")
+combat = true
+selectOption(settings.hands, "BOTH")
+selectOption(settings.leftClick, "stone:40")
+assert(ns.Database:Get("hands") == "OFF" and ns.Database:GetClick("LeftButton") == "stone:1643")
+counts[12404] = 0
+counts[2862] = 5
+ns.Core:OnEvent("BAG_UPDATE_DELAYED")
+assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
+ns.Database:Set("hands", "MAIN")
+ns.Buttons:ApplyLayout()
+assert(ns.Buttons.layoutPending and not main:IsShown())
+combat = false
+ns.Core:OnEvent("PLAYER_REGEN_ENABLED")
+assert(main:IsShown() and not ns.Buttons.offButton:IsShown())
+assert(not main.attributes.macrotext1, "an exhausted stone never silently substitutes a different strength")
+selectOption(settings.hands, "BOTH")
+assert(main:IsShown() and ns.Buttons.offButton:IsShown())
+assert(anchor.width == 48 and anchor.height > 96)
+selectOption(settings.orientation, "HORIZONTAL")
+assert(anchor.width == 101 and anchor.height == 48)
+-- A hidden hand's timer alone must not keep polling active.
+states[16] = { hasWeapon = true, hasEnchant = false, expirationMS = 0, charges = 0 }
+states[17] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
+    expirationMS = 123000, charges = 0, enchantID = 1643 }
+ns.Buttons:Refresh(true)
+assert(anchor.scripts.OnUpdate)
+selectOption(settings.hands, "MAIN")
+assert(not anchor.scripts.OnUpdate)
+selectOption(settings.hands, "OFF")
+assert(anchor.scripts.OnUpdate and ns.Buttons.offButton.timeText.text == "3m")
+StaticPopupDialogs.SIMPLEPOISONS_CONFIRM_RESET.OnAccept()
+assert(ns.Database:Get("hands") == "BOTH" and main:IsShown() and ns.Buttons.offButton:IsShown())
+print("Warrior stone clicks, one-hand geometry, persistence, combat deferral and visible timers passed")
+
+-- Auto choices rebind on bag events, preserving the real bound item in combat.
+counts[12404], counts[7964], counts[2862] = 2, 3, 4
+selectOption(settings.leftClick, "stone:auto")
+assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
+ns.Buttons:ShowTooltip(main)
+assert(table.concat(tooltipLines, "\n"):find("Dense Sharpening Stone (2 in bags)", 1, true))
+combat = true
+counts[12404] = 0
+ns.Core:OnEvent("BAG_UPDATE_DELAYED")
+assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
+ns.Buttons:ShowTooltip(main)
+assert(table.concat(tooltipLines, "\n"):find("Dense Sharpening Stone (0 in bags)", 1, true))
+combat = false
+ns.Core:OnEvent("PLAYER_REGEN_ENABLED")
+assert(main.attributes.macrotext1 == "/use item:7964\n/use 16")
+assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:7964\n/use 17")
+counts[12404] = 5
+ns.Core:OnEvent("BAG_UPDATE_DELAYED")
+assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
+print("Auto stone UI: dropdown, exact tooltip, bag upgrades and combat-safe fallback passed")
+
+-- The collector's standard path must receive the actual logo, not guess a region.
+-- Supply the libraries after addon initialization to exercise PLAYER_LOGIN retry.
+local legacyMinimap = ns.MinimapButton.button
+local registrations, registeredObject, registeredSettings = 0
+local libraryButton = widget("LibDBIcon10_SimplePoisons")
+libraryButton.icon = widget()
+local library = {}
+function library:Register(name, object, settings)
+    assert(name == "SimplePoisons" and object.type == "launcher")
+    registrations = registrations + 1
+    registeredObject, registeredSettings = object, settings
+    libraryButton.dataObject = object
+    libraryButton.icon:SetTexture(object.icon)
+end
+function library:GetMinimapButton(name) assert(name == "SimplePoisons"); return libraryButton end
+function library:Refresh(name, settings)
+    assert(name == "SimplePoisons" and settings == registeredSettings)
+    libraryButton.angle = settings.minimapPos
+    if settings.hide then libraryButton:Hide() else libraryButton:Show() end
+end
+function library:Show(name) self:Refresh(name, registeredSettings) end
+function library:Hide(name) assert(name == "SimplePoisons"); libraryButton:Hide() end
+local broker = {}
+function broker:NewDataObject(name, object) assert(name == "SimplePoisons"); return object end
+LibStub = function(name, silent)
+    assert(silent)
+    if name == "LibDataBroker-1.1" then return broker end
+    if name == "LibDBIcon-1.0" then return library end
+end
+ns.Core:OnEvent("PLAYER_LOGIN")
+assert(registrations == 1 and ns.MinimapButton.button == libraryButton)
+assert(not legacyMinimap:IsShown(), "the fallback must not leave a duplicate minimap button")
+assert(libraryButton.icon.texture == "Interface\\AddOns\\SimplePoisons\\assets\\minimap-icon.tga")
+assert(registeredObject.iconCoords[1] == 0 and registeredObject.iconCoords[2] == 1)
+registeredObject.OnClick(libraryButton, "LeftButton")
+assert(settings:IsShown(), "standard launcher clicks still open options")
+registeredObject.OnTooltipShow(GameTooltip)
+assert(table.concat(tooltipLines, "\n"):find(ns.L.MINIMAP_TOOLTIP, 1, true))
+settings.showMinimap:SetChecked(false)
+settings.showMinimap.scripts.OnClick(settings.showMinimap)
+assert(registeredSettings.hide and not libraryButton:IsShown())
+registeredSettings.minimapPos = -90
+assert(ns.Database:Get("minimapAngle") == 270, "library drag angles preserve the original angle range")
+assert(ns.Database:Initialize(SimplePoisonsDB).minimapAngle == 270)
+assert(registeredSettings.minimapPos == 270 and registeredSettings.hide)
+StaticPopupDialogs.SIMPLEPOISONS_CONFIRM_RESET.OnAccept()
+assert(libraryButton:IsShown() and registeredSettings.minimapPos == ns.Defaults.minimapAngle)
+assert(not registeredSettings.hide, "reset rebinds to the current database rather than an obsolete table")
+ns.Core:OnEvent("PLAYER_LOGIN")
+ns.MinimapButton:Create()
+assert(registrations == 1, "repeated login/create must not register duplicate launchers")
+-- First-load registration also skips creating a custom button entirely.
+local fresh = { Database = ns.Database, Defaults = ns.Defaults, Options = ns.Options, L = ns.L }
+assert(loadfile("MinimapButton.lua"))("SimplePoisons", fresh)
+assert(fresh.MinimapButton:Create() == libraryButton)
+assert(fresh.MinimapButton.library == library)
+print("LibDBIcon: actual logo, late/early library registration, click/tooltip, visibility, drag, reset and no duplicates passed")

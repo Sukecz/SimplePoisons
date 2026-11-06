@@ -1,7 +1,7 @@
 local ns = {
     ApiCompat = { IsCombatLocked = function() return false end },
     Database = { GetClick = function(_, button) return button end },
-    PoisonData = { GetAvailableItem = function(_, family) return family == "LeftButton" and 6947 or nil end },
+    ApplicationData = { GetAvailableItem = function(_, family) return family == "LeftButton" and 6947 or nil end },
     Buttons = {},
 }
 

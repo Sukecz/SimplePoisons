@@ -132,7 +132,7 @@ function Options:Create()
         return self.frame
     end
     local frame = createBackdropFrame("Frame", "SimplePoisonsOptions", UIParent)
-    frame:SetSize(560, 740)
+    frame:SetSize(560, 780)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
@@ -157,14 +157,14 @@ function Options:Create()
     frame.closeTop:SetScript("OnClick", function() frame:Hide() end)
 
     createSection(frame, ns.L.CLICK_ASSIGNMENTS, -175)
-    local poisonOptions = ns.PoisonData:GetOptions()
-    frame.leftClick = createDropdown(frame, ns.L.LEFT_CLICK, -203, 220, poisonOptions,
+    local applicationOptions = ns.ApplicationData:GetOptions()
+    frame.leftClick = createDropdown(frame, ns.L.LEFT_CLICK, -203, 300, applicationOptions,
         function() return ns.Database:GetClick("LeftButton") end,
         function(value) ns.Database:SetClick("LeftButton", value) end)
-    frame.rightClick = createDropdown(frame, ns.L.RIGHT_CLICK, -243, 220, poisonOptions,
+    frame.rightClick = createDropdown(frame, ns.L.RIGHT_CLICK, -243, 300, applicationOptions,
         function() return ns.Database:GetClick("RightButton") end,
         function(value) ns.Database:SetClick("RightButton", value) end)
-    frame.middleClick = createDropdown(frame, ns.L.MIDDLE_CLICK, -283, 220, poisonOptions,
+    frame.middleClick = createDropdown(frame, ns.L.MIDDLE_CLICK, -283, 300, applicationOptions,
         function() return ns.Database:GetClick("MiddleButton") end,
         function(value) ns.Database:SetClick("MiddleButton", value) end)
 
@@ -181,7 +181,17 @@ function Options:Create()
         function(value) return tostring(math.floor(value)) end)
 
     createSection(frame, ns.L.APPEARANCE, -475)
-    frame.orientation = createDropdown(frame, ns.L.ORIENTATION, -503, 145, {
+    frame.hands = createDropdown(frame, ns.L.VISIBLE_HANDS, -503, 180, {
+        { value = "BOTH", label = ns.L.BOTH_HANDS },
+        { value = "MAIN", label = ns.L.MAIN_HAND_ONLY },
+        { value = "OFF", label = ns.L.OFF_HAND_ONLY },
+    }, function() return ns.Database:Get("hands") end,
+    function(value)
+        ns.Database:Set("hands", value)
+        ns.Buttons:ApplyLayout()
+    end)
+
+    frame.orientation = createDropdown(frame, ns.L.ORIENTATION, -543, 145, {
         { value = "HORIZONTAL", label = ns.L.HORIZONTAL },
         { value = "VERTICAL", label = ns.L.VERTICAL },
     }, function() return ns.Database:Get("orientation") end,
@@ -190,13 +200,13 @@ function Options:Create()
         ns.Buttons:ApplyLayout()
     end)
 
-    frame.scale = createSlider(frame, "SimplePoisonsScale", ns.L.SCALE, -558,
+    frame.scale = createSlider(frame, "SimplePoisonsScale", ns.L.SCALE, -598,
         ns.Ranges.scale.min, ns.Ranges.scale.max, 0.1,
         function() return ns.Database:Get("scale") end,
         function(value) ns.Database:Set("scale", value) end,
         function(value) return string.format("%.1fx", value) end)
 
-    frame.textSize = createSlider(frame, "SimplePoisonsTextSize", ns.L.TEXT_SIZE, -613,
+    frame.textSize = createSlider(frame, "SimplePoisonsTextSize", ns.L.TEXT_SIZE, -653,
         ns.Ranges.textSize.min, ns.Ranges.textSize.max, 1,
         function() return ns.Database:Get("textSize") end,
         function(value) ns.Database:Set("textSize", value) end,
@@ -216,14 +226,14 @@ function Options:Create()
         end
     end)
 
-    frame.showMinimap = createCheckButton(frame, ns.L.SHOW_MINIMAP, -660,
+    frame.showMinimap = createCheckButton(frame, ns.L.SHOW_MINIMAP, -700,
         function() return ns.Database:Get("showMinimap") end,
         function(value)
             ns.Database:Set("showMinimap", value)
             ns.MinimapButton:RefreshVisibility()
         end)
 
-    frame.showSettingsIcon = createCheckButton(frame, ns.L.SHOW_SETTINGS_ICON, -660,
+    frame.showSettingsIcon = createCheckButton(frame, ns.L.SHOW_SETTINGS_ICON, -700,
         function() return ns.Database:Get("showSettingsIcon") end,
         function(value)
             if ns.ApiCompat:IsCombatLocked() then
@@ -235,7 +245,7 @@ function Options:Create()
             ns.Buttons:ApplyLayout()
         end)
     frame.showSettingsIcon:ClearAllPoints()
-    frame.showSettingsIcon:SetPoint("TOPLEFT", 280, -660)
+    frame.showSettingsIcon:SetPoint("TOPLEFT", 280, -700)
 
     frame.move = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     frame.move:SetSize(112, 24)
@@ -294,6 +304,7 @@ function Options:Refresh()
     self.frame.middleClick:Refresh()
     self.frame.lowTime:Refresh()
     self.frame.lowCharges:Refresh()
+    self.frame.hands:Refresh()
     self.frame.orientation:Refresh()
     self.frame.scale:Refresh()
     self.frame.textSize:Refresh()

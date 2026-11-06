@@ -111,7 +111,7 @@ function Buttons:CreateButton(name, slotID, slotLabel)
         if not self.availableItems[mouseButton] then
             local familyKey = ns.Database:GetClick(mouseButton)
             if familyKey then
-                ns.Core:Print(string.format(ns.L.NO_POISON, ns.PoisonData:GetLabel(familyKey)))
+                ns.Core:Print(string.format(ns.L.NO_POISON, ns.ApplicationData:GetLabel(familyKey)))
             end
         end
     end)
@@ -218,7 +218,14 @@ function Buttons:ApplyLayout()
     else
         self.settingsButton:Hide()
     end
-    if ns.Database:Get("orientation") == "VERTICAL" then
+    local hands = ns.Database:Get("hands")
+    if hands == "OFF" then self.mainButton:Hide() else self.mainButton:Show() end
+    if hands == "MAIN" then self.offButton:Hide() else self.offButton:Show() end
+    if hands == "MAIN" or hands == "OFF" then
+        self.anchor:SetSize(size, size)
+        local visible = hands == "MAIN" and self.mainButton or self.offButton
+        visible:SetPoint("CENTER", self.anchor, "CENTER")
+    elseif ns.Database:Get("orientation") == "VERTICAL" then
         local verticalGap = (textSize * 2) + 7
         self.anchor:SetSize(size, (size * 2) + verticalGap)
         self.mainButton:SetPoint("TOP", self.anchor, "TOP")
@@ -229,6 +236,7 @@ function Buttons:ApplyLayout()
         self.offButton:SetPoint("LEFT", self.mainButton, "RIGHT", gap, 0)
     end
     self.anchor:SetScale(ns.Database:Get("scale"))
+    if self.mainButton.state then self:UpdateTimer() end
 end
 
 function Buttons:ApplyTextStyle()
@@ -387,8 +395,9 @@ end
 function Buttons:UpdateTimer()
     local main = self.mainButton.state
     local off = self.offButton.state
-    local active = (main.hasEnchant and main.hasExpirationTime and main.expirationMS > 0)
-        or (off.hasEnchant and off.hasExpirationTime and off.expirationMS > 0)
+    local hands = ns.Database:Get("hands")
+    local active = (hands ~= "OFF" and main.hasEnchant and main.hasExpirationTime and main.expirationMS > 0)
+        or (hands ~= "MAIN" and off.hasEnchant and off.hasExpirationTime and off.expirationMS > 0)
     if active ~= self.timerActive then
         self.timerActive = active
         self.elapsed = 0
@@ -431,10 +440,10 @@ function Buttons:ShowTooltip(button)
         local itemID = button.availableItems[mapping[1]]
         local label
         if itemID then
-            label = string.format(ns.L.RANK_STOCK, ns.PoisonData:GetItemLabel(familyKey, itemID),
+            label = string.format(ns.L.RANK_STOCK, ns.ApplicationData:GetItemLabel(familyKey, itemID),
                 ns.ApiCompat:GetItemCount(itemID))
         else
-            label = string.format(ns.L.NO_USABLE_RANK, ns.PoisonData:GetLabel(familyKey))
+            label = string.format(ns.L.NO_USABLE_RANK, ns.ApplicationData:GetLabel(familyKey))
         end
         GameTooltip:AddDoubleLine(mapping[2], label, 1, 0.82, 0, 1, 1, 1)
     end

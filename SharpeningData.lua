@@ -3,8 +3,7 @@ local addonName, ns = ...
 local SharpeningData = {}
 ns.SharpeningData = SharpeningData
 
--- Monitoring only: these items never enter poison options or secure macros.
--- Item textures and enchant IDs audited against client databases, 2026-10-07.
+-- Item/enchant mappings and per-client durations: docs/sharpening-stones.md.
 SharpeningData.enchants = {
     [40] = { itemID = 2862, label = "Rough Sharpening Stone", icon = "INV_Stone_SharpeningStone_01" },
     [13] = { itemID = 2863, label = "Coarse Sharpening Stone", icon = "INV_Stone_SharpeningStone_02" },
@@ -29,4 +28,80 @@ end
 function SharpeningData:GetIcon(stone)
     -- Exact fallback also works before item data loads, with empty bags or dead.
     return ns.ApiCompat:GetItemIcon(stone.itemID) or ("Interface\\Icons\\" .. stone.icon)
+end
+
+-- Explicit choices retain their strength; auto mode follows flat weapon damage.
+SharpeningData.order = { 40, 13, 14, 483, 1643, 2506, 2684, 2712, 2713, 7098 }
+
+SharpeningData.AUTO_KEY = "stone:auto"
+SharpeningData.AUTO_LABEL = "Sharpening Stone (Auto: max damage)"
+-- Elemental crit and restricted undead/BFD bonuses cannot be ranked as flat damage.
+SharpeningData.autoOrder = { 2713, 2712, 1643, 483, 14, 13, 40 }
+
+function SharpeningData:IsAvailableChoice(key)
+    return key == self.AUTO_KEY or self:GetChoice(key) ~= nil
+end
+
+function SharpeningData:GetChoice(key)
+    local enchantID = type(key) == "string" and key:match("^stone:(%d+)$")
+    local stone = enchantID and self:GetByEnchantID(enchantID)
+    if not stone or (tonumber(enchantID) == 7098 and not ns.ApiCompat:IsSoD()) then
+        return nil
+    end
+    return stone
+end
+
+function SharpeningData:GetItemIDs(stone)
+    if stone.itemID == 18262 and ns.ApiCompat:IsForever() then
+        return { 287980, 18262 }
+    elseif stone.itemID == 23122 and ns.ApiCompat:IsSoD() then
+        return { 238241, 23122 }
+    end
+    return { stone.itemID }
+end
+
+function SharpeningData:GetDuration(stone)
+    return (ns.ApiCompat:IsTBC() or stone.itemID == 23122) and 3600 or 1800
+end
+
+function SharpeningData:GetAvailableItem(key)
+    if key == self.AUTO_KEY then
+        for _, enchantID in ipairs(self.autoOrder) do
+            local itemID = self:GetAvailableItem("stone:" .. enchantID)
+            if itemID then return itemID end
+        end
+        return nil
+    end
+    local stone = self:GetChoice(key)
+    if stone then
+        for _, itemID in ipairs(self:GetItemIDs(stone)) do
+            if ns.ApiCompat:GetItemCount(itemID) > 0 and ns.ApiCompat:MeetsItemLevel(itemID) then
+                return itemID
+            end
+        end
+    end
+end
+
+function SharpeningData:GetOptions()
+    local options = { { value = self.AUTO_KEY, label = self.AUTO_LABEL } }
+    for _, enchantID in ipairs(self.order) do
+        local key = "stone:" .. enchantID
+        local stone = self:GetChoice(key)
+        if stone then
+            options[#options + 1] = { value = key,
+                label = string.format("%s (%d min)", stone.label, self:GetDuration(stone) / 60) }
+        end
+    end
+    return options
+end
+
+function SharpeningData:RequestItemData()
+    for _, option in ipairs(self:GetOptions()) do
+        local stone = self:GetChoice(option.value)
+        if stone then
+            for _, itemID in ipairs(self:GetItemIDs(stone)) do
+                ns.ApiCompat:RequestItemData(itemID)
+            end
+        end
+    end
 end

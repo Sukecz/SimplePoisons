@@ -2,8 +2,8 @@
 
 ![SimplePoisons](assets/logo-wide.png)
 
-SimplePoisons is a focused, dependency-free poison monitor and applicator for
-Rogue players in WoW Classic Era, Classic Hardcore, Burning Crusade Classic,
+SimplePoisons is a focused, dependency-free poison and sharpening-stone monitor
+and click-to-apply helper for Rogues, Warriors, and other weapon users in WoW Classic Era, Classic Hardcore, Burning Crusade Classic,
 and the WoW Forever beta.
 It replaces sprawling poison menus and detached warnings with one compact pair
 of weapon buttons.
@@ -17,9 +17,14 @@ It keeps everything on two buttons:
 - a red border means the weapon has no temporary enchant;
 - a gray border and weapon icon indicate an unidentified or other temporary enchant;
 - active sharpening stones show their own icon and remaining time with a gray border;
-- left, right, and middle click apply three configurable poison families.
+- left, right, and middle click apply three configurable poison families or stones;
+- show both weapon buttons, only the main hand, or only the off hand.
 - a small gear on the pair and an optional `SP` minimap button open settings;
   both can be hidden independently in settings. `/sp` always opens settings.
+  When LibDBIcon and LibDataBroker are supplied by another addon (such as
+  Leatrix Plus), SimplePoisons registers a standard launcher so minimap-button
+  collectors receive the correct logo, click action and tooltip. Otherwise
+  the addon creates its own button; no additional addon installation is needed.
 
 The addon automatically selects the highest owned rank of the configured
 poison family that meets the Rogue's level requirement. While item data is
@@ -33,8 +38,25 @@ thresholds are adjustable in the settings window.
 
 Sharpening stones are detected on both weapons: Rough, Coarse, Heavy, Solid,
 Dense, Elemental, Consecrated, Blackfathom where present, and Fel/Adamantite in
-TBC. Their tooltip shows the stone name. This is monitoring only; click
-assignments still apply poisons. Timers use the client's remaining time.
+TBC. Each stone is selectable separately under `/sp` → Click assignments,
+with the catalog duration beside its name. Era/Forever regular stones last
+30 minutes; TBC stones last 60 minutes; Consecrated is listed as 60 minutes.
+Timers always use the client's actual remaining time. Forever's additional
+Elemental item ID is supported; Blackfathom and the alternate Consecrated item
+are selectable on Season of Discovery only. A database record does not imply
+that an event item can currently be obtained.
+
+Under Appearance → Visible weapons choose Both hands, Main hand only, or
+Off hand only. One-hand mode also works with a tank's weapon and shield or a
+two-handed weapon, and the choice survives `/reload`. The addon and minimap
+button are available to Warriors and other classes. Only Rogues see poison
+choices; other classes start with Auto: max damage, including when migrating
+old poison defaults. Existing explicit stone selections stay saved. Explicit stone selections keep their strength when stock runs out. Choose
+`Sharpening Stone (Auto: max damage)` to select the strongest stocked stone
+meeting your level requirement: Adamantite → Fel → Dense → Solid → Heavy →
+Coarse → Rough, filtered for the client. It switches after bag changes, or after
+combat if necessary. Elemental (crit), Consecrated (undead) and Blackfathom
+(BFD only) remain manual choices because their value depends on the situation. See the [full item, enchant and duration audit](docs/sharpening-stones.md).
 
 ## Commands
 
@@ -54,11 +76,11 @@ inventory and character events refresh idle buttons.
 
 ## Status
 
-SimplePoisons 0.2.6 supports Classic Era, Hardcore, and Burning Crusade Classic
+SimplePoisons 0.2.7 supports Classic Era, Hardcore, and Burning Crusade Classic
 2.5.6. TBC includes Instant Poison VII, Deadly Poison VI and VII, Wound Poison V,
 and Anesthetic Poison. The separate Forever 1.60.1 support remains beta pending
 live server testing and uses its modern temporary-enchant API. Every client
-keeps the same secure, hardware-click poison workflow. Automated Lua, data,
+keeps the same secure, hardware-click application workflow. Automated Lua, data,
 metadata, and packaging tests cover the project. Protected clicks, poison
 replacement confirmation behavior, and final geometry still require live
 verification in each client.

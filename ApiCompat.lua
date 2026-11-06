@@ -12,6 +12,18 @@ function ApiCompat:IsTBC()
         and WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
 end
 
+function ApiCompat:IsForever()
+    return WOW_PROJECT_ID ~= nil and WOW_PROJECT_CAMELOT ~= nil
+        and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT
+end
+
+function ApiCompat:IsSoD()
+    return C_Seasons and Enum and Enum.SeasonID
+        and Enum.SeasonID.SeasonOfDiscovery ~= nil
+        and type(C_Seasons.GetActiveSeason) == "function"
+        and C_Seasons.GetActiveSeason() == Enum.SeasonID.SeasonOfDiscovery or false
+end
+
 function ApiCompat:IsRogue()
     if type(UnitClass) ~= "function" then
         return true
@@ -35,6 +47,10 @@ function ApiCompat:CanUsePoisonRank(itemID)
         return false
     end
 
+    return self:MeetsItemLevel(itemID)
+end
+
+function ApiCompat:MeetsItemLevel(itemID)
     local requiredLevel
     if C_Item and type(C_Item.GetItemInfo) == "function" then
         requiredLevel = select(5, C_Item.GetItemInfo(itemID))

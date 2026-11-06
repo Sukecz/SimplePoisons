@@ -23,6 +23,7 @@ ns.Defaults = {
     scale = 1.0,
     textSize = 13,
     orientation = "HORIZONTAL",
+    hands = "BOTH",
     showMinimap = true,
     showSettingsIcon = true,
     minimapAngle = 225,

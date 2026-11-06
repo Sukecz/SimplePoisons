@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.7
+
+- Apply sharpening stones with Left, Right, or Middle Click on the selected weapon button, including on Warriors and other non-Rogue classes.
+- Add "Sharpening Stone (Auto: max damage)" to choose the strongest stocked flat-damage stone allowed by the client and character level. Update after bag changes, with secure changes deferred until combat ends. Elemental and conditional stones remain explicit choices.
+- Show only stone choices to non-Rogues and migrate their old poison defaults to Auto. Rogues keep both poisons and stones.
+- Add Both hands, Main hand only, and Off hand only display modes, saved per character, with compact single-button positioning.
+- Audit Era, TBC and Forever stone IDs and durations, including the additional Forever Elemental item and SoD-specific variants. Display catalog durations in settings; countdowns use actual client data.
+- Fix the missing minimap logo and custom-button warning with Leatrix Plus by registering through existing LibDataBroker/LibDBIcon libraries. Preserve the standalone launcher, visibility preference and saved position when these optional libraries are absent.
+- Add regression coverage for stone selection, automatic fallback, class filtering, single-hand layouts, combat safety, minimap integration and texture format.
+
+No additional addon installation is required. Forever support remains beta; live Rogue application and all client-specific replacement confirmations still require verification.
+
 ## 0.2.6
 
 - Add a per-character "Show settings icon" option to hide the small gear beside the weapon buttons.

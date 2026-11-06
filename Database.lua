@@ -13,8 +13,9 @@ local function clamp(value, range, fallback)
     return math.max(range.min, math.min(range.max, value))
 end
 
-local function validFamily(value, fallback)
-    return ns.PoisonData:IsAvailableFamily(value) and value or fallback
+local function validChoice(value, fallback)
+    if ns.ApplicationData:IsAvailableChoice(value) then return value end
+    return ns.ApiCompat:IsRogue() and fallback or ns.SharpeningData.AUTO_KEY
 end
 
 function Database:Initialize(saved)
@@ -26,15 +27,16 @@ function Database:Initialize(saved)
     self.data = {
         schemaVersion = ns.Constants.SCHEMA_VERSION,
         clicks = {
-            LeftButton = validFamily(clicks.LeftButton, defaults.clicks.LeftButton),
-            RightButton = validFamily(clicks.RightButton, defaults.clicks.RightButton),
-            MiddleButton = validFamily(clicks.MiddleButton, defaults.clicks.MiddleButton),
+            LeftButton = validChoice(clicks.LeftButton, defaults.clicks.LeftButton),
+            RightButton = validChoice(clicks.RightButton, defaults.clicks.RightButton),
+            MiddleButton = validChoice(clicks.MiddleButton, defaults.clicks.MiddleButton),
         },
         lowMinutes = clamp(saved.lowMinutes, ns.Ranges.lowMinutes, defaults.lowMinutes),
         lowCharges = clamp(saved.lowCharges, ns.Ranges.lowCharges, defaults.lowCharges),
         scale = clamp(saved.scale, ns.Ranges.scale, defaults.scale),
         textSize = clamp(saved.textSize, ns.Ranges.textSize, defaults.textSize),
         orientation = saved.orientation == "VERTICAL" and "VERTICAL" or "HORIZONTAL",
+        hands = (saved.hands == "MAIN" or saved.hands == "OFF") and saved.hands or "BOTH",
         showMinimap = saved.showMinimap ~= false,
         showSettingsIcon = saved.showSettingsIcon ~= false,
         minimapAngle = math.max(0, math.min(359, tonumber(saved.minimapAngle) or defaults.minimapAngle)),
@@ -68,6 +70,8 @@ function Database:Set(key, value)
         value = clamp(value, ns.Ranges.textSize, ns.Defaults.textSize)
     elseif key == "orientation" then
         value = value == "VERTICAL" and "VERTICAL" or "HORIZONTAL"
+    elseif key == "hands" then
+        value = (value == "MAIN" or value == "OFF") and value or "BOTH"
     elseif key == "showMinimap" or key == "showSettingsIcon" then
         value = value and true or false
     elseif key == "minimapAngle" then
@@ -84,7 +88,7 @@ function Database:GetClick(mouseButton)
 end
 
 function Database:SetClick(mouseButton, familyKey)
-    if not self.data or not self.data.clicks[mouseButton] or not ns.PoisonData:IsAvailableFamily(familyKey) then
+    if not self.data or not self.data.clicks[mouseButton] or not ns.ApplicationData:IsAvailableChoice(familyKey) then
         return false
     end
     self.data.clicks[mouseButton] = familyKey

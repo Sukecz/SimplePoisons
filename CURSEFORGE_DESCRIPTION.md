@@ -1,6 +1,6 @@
 # CurseForge project summary
 
-A lightweight two-button Rogue poison tracker and click-to-apply helper for WoW Classic Era, Hardcore, Burning Crusade Classic, and Forever.
+A compact poison and sharpening-stone tracker and click-to-apply helper for WoW Classic Era, Hardcore, Burning Crusade Classic, and Forever.
 
 # Recommended CurseForge categories
 
@@ -10,28 +10,33 @@ A lightweight two-button Rogue poison tracker and click-to-apply helper for WoW 
 
 # Full description
 
-SimplePoisons keeps your weapon poisons visible, understandable, and one click away without adding a large poison grid or a separate warning frame.
+SimplePoisons keeps weapon poisons and sharpening stones visible and one click away. Rogues can choose poisons or stones; Warriors and other classes see stone choices only.
 
-Two compact buttons represent your Main Hand and Off Hand. Each button shows the current temporary enchant, remaining duration, and remaining charges in the same place where you apply the next poison.
+Choose both weapon buttons, Main Hand only, or Off Hand only. Each button shows the current temporary enchant, remaining duration, and any remaining charges in the same place where you apply the next poison or stone. Single-hand mode works well for tanks with a weapon and shield or players with a two-handed weapon.
 
 ## Simple click controls
 
-The weapon button chooses the target hand. The mouse button chooses the poison:
+The weapon button chooses the target hand. The mouse button chooses the assigned poison or stone:
 
-- Left Click applies your first configured poison.
-- Right Click applies your second configured poison.
-- Middle Click applies your third configured poison.
+- Left Click applies your first configured poison or stone.
+- Right Click applies your second configured poison or stone.
+- Middle Click applies your third configured poison or stone.
 
 For example, if Left Click is assigned to Instant Poison, Left Click on `MH` applies it to the main hand and Left Click on `OH` applies it to the off hand.
 
 SimplePoisons automatically uses the highest available rank of the selected poison family found in your bags.
+
+For stones, choose a specific type or "Sharpening Stone (Auto: max damage)". Auto selects Adamantite, Fel, Dense, Solid, Heavy, Coarse, then Rough, filtered by client, stock and character level. It switches when bags change; combat delays secure updates until combat ends. Elemental crit, Consecrated undead and Blackfathom dungeon bonuses remain manual choices because their value depends on the situation.
+
+Era and Forever regular stones are listed as 30 minutes; TBC stones and Consecrated are listed as 60 minutes. The displayed countdown always follows the client's actual remaining time.
 
 ## Clear weapon status
 
 - A neutral green border means the weapon poison is healthy.
 - An orange border means its duration or charges are running low.
 - A red border and `MISSING` mean the weapon has no temporary enchant.
-- Active sharpening stones show their own icon, name, and remaining time with a neutral gray border. Stone detection does not add stone application; clicks still apply poisons.
+- Choose both weapon icons, main hand only, or off hand only in settings.
+- Active sharpening stones show their own icon, name, and remaining time with a neutral gray border. Click assignments also offer individual sharpening stones with client-specific durations. Warriors and other classes can use stones.
 - The default warning thresholds are below 3 minutes or below 10 charges.
 - Both warning thresholds are fully configurable.
 
@@ -42,7 +47,7 @@ SimplePoisons automatically uses the highest available rank of the selected pois
 - Adjust the scale.
 - Move and lock the paired buttons.
 - Open settings from the small gear, the optional draggable green `SP` minimap button, or `/sp`. Hide the gear independently with the "Show settings icon" option.
-- No external libraries or dependencies.
+- No additional addon installation is required. When another addon supplies LibDBIcon and LibDataBroker, the launcher uses them for compatibility with minimap collectors such as Leatrix Plus.
 
 ## Commands
 
@@ -56,4 +61,4 @@ SimplePoisons automatically uses the highest available rank of the selected pois
 
 SimplePoisons supports WoW Classic Era, Classic Hardcore, and Burning Crusade Classic 2.5.6. TBC support includes Instant Poison VII, Deadly Poison VI and VII, Wound Poison V, and Anesthetic Poison. Separate WoW Forever 1.60.1 support remains beta pending live server testing and uses its modern temporary-enchant API.
 
-Poison application always requires a real mouse click. SimplePoisons does not automate gameplay, suppress Blizzard errors, or bypass poison replacement confirmations.
+Poison and stone application always require a real mouse click. SimplePoisons does not automate gameplay, suppress Blizzard errors, or bypass poison replacement confirmations.

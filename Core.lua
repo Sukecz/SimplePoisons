@@ -15,13 +15,11 @@ end
 function Core:Initialize()
     ns.Database:Initialize(SimplePoisonsDB)
     ns.PoisonData:RequestItemData()
+    ns.SharpeningData:RequestItemData()
     ns.Buttons:Create()
     ns.MinimapButton:Create()
     ns.SecureActions:RefreshAll()
     ns.SlashCommands:Register()
-    if not ns.ApiCompat:IsRogue() and not ns.ApiCompat:IsCombatLocked() then
-        ns.Buttons.anchor:Hide()
-    end
 end
 
 function Core:OnEvent(event, ...)
@@ -32,6 +30,7 @@ function Core:OnEvent(event, ...)
         self:Initialize()
         self.frame:UnregisterEvent("ADDON_LOADED")
     elseif event == "PLAYER_LOGIN" then
+        ns.MinimapButton:Create()
         ns.SecureActions:RefreshAll()
         ns.Buttons:Refresh()
         ns.MinimapButton:RefreshVisibility()

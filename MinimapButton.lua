@@ -3,6 +3,49 @@ local addonName, ns = ...
 local MinimapButton = {}
 ns.MinimapButton = MinimapButton
 
+local ICON = "Interface\\AddOns\\SimplePoisons\\assets\\minimap-icon.tga"
+
+function MinimapButton:TryUseLibraries()
+    if self.library then return true end
+    if not LibStub or not Minimap then return false end
+    local broker = LibStub("LibDataBroker-1.1", true)
+    local library = LibStub("LibDBIcon-1.0", true)
+    if not broker or not library then return false end
+
+    -- Bridge the library's settings to the existing per-character fields.
+    -- Dynamic access also keeps /sp reset from leaving a stale settings table.
+    self.librarySettings = setmetatable({}, {
+        __index = function(_, key)
+            if key == "minimapPos" then return ns.Database:Get("minimapAngle") end
+            if key == "hide" then return not ns.Database:Get("showMinimap") end
+        end,
+        __newindex = function(settings, key, value)
+            if key == "minimapPos" then
+                ns.Database:Set("minimapAngle", (tonumber(value) or ns.Defaults.minimapAngle) % 360)
+            elseif key == "hide" then
+                ns.Database:Set("showMinimap", not value)
+            else
+                rawset(settings, key, value)
+            end
+        end,
+    })
+    self.dataObject = broker:NewDataObject(addonName, {
+        type = "launcher",
+        icon = ICON,
+        iconCoords = { 0, 1, 0, 1 },
+        OnClick = function() ns.Options:Open() end,
+        OnTooltipShow = function(tooltip)
+            tooltip:SetText(ns.L.ADDON_NAME, 1, 0.82, 0)
+            tooltip:AddLine(ns.L.MINIMAP_TOOLTIP, 1, 1, 1, true)
+        end,
+    })
+    if self.button then self.button:Hide() end
+    self.library = library
+    library:Register(addonName, self.dataObject, self.librarySettings)
+    self.button = library:GetMinimapButton(addonName)
+    return true
+end
+
 local function atan2(y, x)
     if math.atan2 then
         return math.atan2(y, x)
@@ -22,6 +65,10 @@ local function atan2(y, x)
 end
 
 function MinimapButton:UpdatePosition()
+    if self.library then
+        self.library:Refresh(addonName, self.librarySettings)
+        return
+    end
     if not self.button or not Minimap then
         return
     end
@@ -32,10 +79,18 @@ function MinimapButton:UpdatePosition()
 end
 
 function MinimapButton:RefreshVisibility()
+    if self.library then
+        if ns.Database:Get("showMinimap") then
+            self.library:Show(addonName)
+        else
+            self.library:Hide(addonName)
+        end
+        return
+    end
     if not self.button then
         return
     end
-    if ns.Database:Get("showMinimap") and ns.ApiCompat:IsRogue() then
+    if ns.Database:Get("showMinimap") then
         self.button:Show()
     else
         self.button:Hide()
@@ -59,6 +114,8 @@ function MinimapButton:OnDrag()
 end
 
 function MinimapButton:Create()
+    -- Retry at PLAYER_LOGIN if another addon loads these optional libraries later.
+    if self:TryUseLibraries() then return self.button end
     if self.button or not Minimap then
         return self.button
     end
@@ -74,13 +131,14 @@ function MinimapButton:Create()
     button.background:SetPoint("CENTER")
     button.background:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
 
-    button.icon = button:CreateTexture(nil, "ARTWORK")
+    button.icon = button:CreateTexture("SimplePoisonsMinimapButtonIcon", "ARTWORK")
     button.icon:SetSize(22, 22)
     button.icon:SetPoint("CENTER")
-    button.icon:SetTexture("Interface\\AddOns\\SimplePoisons\\assets\\minimap-icon.tga")
+    button.icon:SetTexture(ICON)
     button.icon:SetTexCoord(0, 1, 0, 1)
 
-    button.border = button:CreateTexture(nil, "OVERLAY")
+    -- Keep the frame behind the logo, including clients with an opaque center.
+    button.border = button:CreateTexture(nil, "BORDER")
     button.border:SetSize(53, 53)
     button.border:SetPoint("TOPLEFT")
     button.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")

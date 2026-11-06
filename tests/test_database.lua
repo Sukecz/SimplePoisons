@@ -2,8 +2,10 @@ local ns = {}
 
 assert(loadfile("Defaults.lua"))("SimplePoisons", ns)
 ns.L = { NONE = "None" }
-ns.ApiCompat = { IsTBC = function() return false end }
+ns.ApiCompat = { IsRogue = function() return true end, IsTBC = function() return false end }
 assert(loadfile("PoisonData.lua"))("SimplePoisons", ns)
+assert(loadfile("SharpeningData.lua"))("SimplePoisons", ns)
+assert(loadfile("ApplicationData.lua"))("SimplePoisons", ns)
 assert(loadfile("Database.lua"))("SimplePoisons", ns)
 
 local data = ns.Database:Initialize({

@@ -49,46 +49,25 @@ Reference records: [Era Instant VI](https://www.wowhead.com/classic/item=8928),
 Forever API signatures and secure macro support were checked in Blizzard's
 [exported UI sources](https://github.com/Gethe/wow-ui-source/tree/forever/Interface/AddOns).
 
-## Sharpening stone catalog audit (2026-10-07)
+## Sharpening stone catalog audit (2026-11-06)
 
-Monitoring uses `SharpeningData.lua`, independently of poison selection and
-secure application. Icons have an exact texture fallback when item data is
-uncached. Remaining time comes from the same three client API paths as poison;
-no duration is inferred from the item description. Stones retain a gray border
-and do not receive poison charge or low-time warnings.
+The [complete catalog and duration sources](docs/sharpening-stones.md) cover
+Era/Hardcore, TBC, Forever's additional Elemental item, and SoD variants.
+`SharpeningData.lua` owns stone data; `ApplicationData.lua` combines click
+choices without changing poison rank selection. Stone clicks have no Rogue
+class restriction. The existing hardware-click macros target inventory slot
+16 or 17 and remain frozen in combat. Each stone is chosen explicitly.
 
-| Stone | Item ID | Enchant ID | Catalog |
-| --- | --- | --- | --- |
-| Rough | 2862 | 40 | Era / TBC / Forever |
-| Coarse | 2863 | 13 | Era / TBC / Forever |
-| Heavy | 2871 | 14 | Era / TBC / Forever |
-| Solid | 7964 | 483 | Era / TBC / Forever |
-| Dense | 12404 | 1643 | Era / TBC / Forever |
-| Elemental | 18262 | 2506 | Era / TBC / Forever |
-| Consecrated | 23122 | 2684 | Era / TBC / Forever; event availability varies |
-| Fel | 23528 | 2712 | TBC |
-| Adamantite | 23529 | 2713 | TBC |
-| Blackfathom | 211845 | 7098 | SoD data; recognized wherever the client exposes it |
+Monitoring retains exact icon fallbacks, the neutral gray border and no poison
+charge/low-time warnings. Actual remaining time always comes from the client;
+catalog durations label the settings choices only. Single-hand visibility and
+layout changes defer in combat; hidden-hand timers do not keep polling active.
 
-Item names, icons and use-spell links were checked in Wowhead's `classic`,
-`tbc` and `forever` item tooltip catalogs. Blackfathom exists in the Forever
-database too; a database record alone does not prove live server availability.
-Effect-to-enchant references:
-[Rough](https://www.wowhead.com/classic/spell=2828/sharpen-blade),
-[Coarse](https://www.wowhead.com/classic/spell=2829/sharpen-blade-ii),
-[Heavy](https://www.wowhead.com/classic/spell=2830/sharpen-blade-iii),
-[Solid](https://www.wowhead.com/classic/spell=9900/sharpen-blade-iv),
-[Dense](https://www.wowhead.com/classic/spell=16138/sharpen-blade-v),
-[Elemental](https://www.wowhead.com/classic/spell=22756/sharpen-weapon-critical),
-[Forever Elemental](https://www.wowhead.com/forever/spell=22756/sharpen-weapon-critical),
-[Consecrated](https://www.wowhead.com/classic/spell=28891/consecrated-weapon),
-[Fel](https://www.wowhead.com/tbc/spell=29452/sharpen-blade),
-[Adamantite](https://www.wowhead.com/tbc/spell=29453/sharpen-blade),
-[Blackfathom](https://www.wowhead.com/classic/spell=430392/sharpen-weapon-hit).
-
-`tests/test_sharpening.lua` covers all ten records, both hands, all three API
-shapes, client gating and uncached icons. UI tests cover combat replacement,
-tooltip identity, countdown, expiration and unchanged poison click macros.
+`tests/test_stone_application.lua` covers every selectable type, all clicks,
+both hands, three clients, per-client durations, alternate item IDs, Warrior
+class eligibility, cold metadata and stock exhaustion. `tests/test_sharpening.lua`
+retains all ten enchant mappings and three API paths. UI tests exercise the real
+dropdown callbacks, single-hand geometry, persistence, combat guards and timers.
 These are simulated checks; live client verification remains required.
 
 ## Live client checks still required
@@ -111,3 +90,24 @@ Repeat on Era, TBC, and Forever with `/sp api` recorded:
 6. Log in or reload with poisons already in bags, including after death and
    while item data is loading. Verify click assignments remain present, work
    after revival, and update too-high-level ranks when metadata arrives.
+
+7. On a Warrior, select a stone for each mouse button and apply it to the
+   intended hand. Test Main hand only with a shield/2H, Off hand only, and Both
+   hands in both orientations; reload and confirm saved selections/visibility.
+   Open settings before combat and verify neither visibility nor click choices
+   can change until combat ends. Test Forever Elemental with item 287980 too.
+
+## Minimap collectors
+
+The installed Leatrix Plus replaces custom minimap buttons and guesses an icon
+from their texture regions. SimplePoisons' highlight could be selected instead
+of its logo, producing the empty-looking replacement and a custom-button warning.
+The launcher now uses existing LibDataBroker/LibDBIcon libraries when available,
+with the explicit icon and tooltip. It retries at PLAYER_LOGIN for libraries
+loaded after SimplePoisons. The standalone button has a named Icon region for
+collectors that inspect it. No external library addon is required.
+
+LibDBIcon position/hide settings bridge to existing per-character values;
+negative drag angles normalize to 0–359 and reset follows the new database table.
+Library-managed positioning is left to its public API. Reference:
+[LibDBIcon registration and visibility API](https://www.wowace.com/projects/libdbicon-1-0).

@@ -10,7 +10,9 @@ ignore:
   - COMPATIBILITY.md
   - CURSEFORGE_DESCRIPTION.md
   - tests
+  - docs
   - tools
+  - tmp
   - assets/minimap-icon.png
   - assets/logo-wide.png
   - assets/logo-1-1.png
