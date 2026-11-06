@@ -133,7 +133,6 @@ function Buttons:Create()
 
     self.settingsButton = CreateFrame("Button", "SimplePoisonsSettingsButton", self.anchor)
     self.settingsButton:SetSize(16, 16)
-    self.settingsButton:SetFrameStrata("HIGH")
     self.settingsButton:SetNormalTexture("Interface\\Buttons\\UI-OptionsButton")
     self.settingsButton:SetHighlightTexture("Interface\\Buttons\\UI-OptionsButton")
     self.settingsButton:GetHighlightTexture():SetAlpha(0.35)

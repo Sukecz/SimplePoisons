@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.8
+
+- Keep the settings gear on the same frame strata as the weapon buttons so it no longer overlays normal game windows.
+
 ## 0.2.7
 
 - Apply sharpening stones with Left, Right, or Middle Click on the selected weapon button, including on Warriors and other non-Rogue classes.
