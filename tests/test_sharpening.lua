@@ -7,6 +7,8 @@ local expected = {
     { 40, 2862 }, { 13, 2863 }, { 14, 2871 }, { 483, 7964 },
     { 1643, 12404 }, { 2506, 18262 }, { 2684, 23122 },
     { 2712, 23528 }, { 2713, 23529 }, { 7098, 211845 },
+    { 19, 3239 }, { 20, 3240 }, { 21, 3241 }, { 484, 7965 },
+    { 1703, 12643 }, { 2954, 28420 }, { 2955, 28421 },
 }
 GetInventoryItemID = function() return 12345 end
 GetInventoryItemTexture = function(slot) return "weapon" end
@@ -19,7 +21,7 @@ for _, project in ipairs({ 2, 5, 99 }) do
     WOW_PROJECT_ID = project
     for _, row in ipairs(expected) do
         local enchant, item = unpack(row)
-        local available = project == 5 or (enchant ~= 2712 and enchant ~= 2713)
+        local available = project == 5 or (enchant ~= 2712 and enchant ~= 2713 and enchant ~= 2954 and enchant ~= 2955)
         for _, api in ipairs({ "legacy", "paperDoll", "item" }) do
             C_Item, C_PaperDollInfo, Enum = nil, nil, nil
             GetWeaponEnchantInfo = function()
@@ -68,6 +70,5 @@ for _, row in ipairs(expected) do
 end
 assert(not ns.SharpeningData:GetByEnchantID(nil))
 assert(not ns.SharpeningData:GetByEnchantID(2626), "oils are not sharpening stones")
-assert(not ns.SharpeningData:GetByEnchantID(1703), "weightstones are not sharpening stones")
 assert(not ns.SharpeningData:GetByEnchantID(1900), "permanent enchants are not sharpening stones")
-print("Sharpening stones: all 10 types, three APIs, both hands, empty bags and icon fallbacks passed")
+print("Sharpening stones and weightstones: all 17 types, three APIs, both hands, empty bags and icon fallbacks passed")

@@ -27,7 +27,7 @@ function SecureActions:ConfigureButton(button)
     button:SetAttribute("useOnKeyDown", false)
     for mouseButton, suffix in pairs(ATTRIBUTE_INDEX) do
         local familyKey = ns.Database:GetClick(mouseButton)
-        local itemID = ns.ApplicationData:GetAvailableItem(familyKey)
+        local itemID = ns.ApplicationData:GetAvailableItem(familyKey, button.slotID)
         local macro = self:BuildMacro(itemID, button.slotID)
         button:SetAttribute("type" .. suffix, macro and "macro" or nil)
         button:SetAttribute("macrotext" .. suffix, macro)

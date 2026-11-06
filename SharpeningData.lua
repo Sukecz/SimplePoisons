@@ -15,6 +15,13 @@ SharpeningData.enchants = {
     [2712] = { itemID = 23528, label = "Fel Sharpening Stone", icon = "INV_Stone_SharpeningStone_06", tbcOnly = true },
     [2713] = { itemID = 23529, label = "Adamantite Sharpening Stone", icon = "INV_Stone_SharpeningStone_07", tbcOnly = true },
     [7098] = { itemID = 211845, label = "Blackfathom Sharpening Stone", icon = "INV_Misc_Rune_04" },
+    [19] = { itemID = 3239, label = "Rough Weightstone", icon = "INV_Stone_WeightStone_01" },
+    [20] = { itemID = 3240, label = "Coarse Weightstone", icon = "INV_Stone_WeightStone_02" },
+    [21] = { itemID = 3241, label = "Heavy Weightstone", icon = "INV_Stone_WeightStone_03" },
+    [484] = { itemID = 7965, label = "Solid Weightstone", icon = "INV_Stone_WeightStone_04" },
+    [1703] = { itemID = 12643, label = "Dense Weightstone", icon = "INV_Stone_WeightStone_05" },
+    [2954] = { itemID = 28420, label = "Fel Weightstone", icon = "INV_Stone_WeightStone_06", tbcOnly = true },
+    [2955] = { itemID = 28421, label = "Adamantite Weightstone", icon = "INV_Stone_WeightStone_07", tbcOnly = true },
 }
 
 function SharpeningData:GetByEnchantID(enchantID)
@@ -31,15 +38,19 @@ function SharpeningData:GetIcon(stone)
 end
 
 -- Explicit choices retain their strength; auto mode follows flat weapon damage.
-SharpeningData.order = { 40, 13, 14, 483, 1643, 2506, 2684, 2712, 2713, 7098 }
+SharpeningData.order = { 40, 13, 14, 483, 1643, 2506, 2684, 2712, 2713, 7098,
+    19, 20, 21, 484, 1703, 2954, 2955 }
 
 SharpeningData.AUTO_KEY = "stone:auto"
-SharpeningData.AUTO_LABEL = "Sharpening Stone (Auto: max damage)"
+SharpeningData.AUTO_LABEL = "Weapon Stone (Auto: max damage)"
+SharpeningData.WEIGHT_AUTO_KEY = "weight:auto"
+SharpeningData.WEIGHT_AUTO_LABEL = "Weightstone (Auto: max damage)"
 -- Elemental crit and restricted undead/BFD bonuses cannot be ranked as flat damage.
 SharpeningData.autoOrder = { 2713, 2712, 1643, 483, 14, 13, 40 }
+SharpeningData.weightAutoOrder = { 2955, 2954, 1703, 484, 21, 20, 19 }
 
 function SharpeningData:IsAvailableChoice(key)
-    return key == self.AUTO_KEY or self:GetChoice(key) ~= nil
+    return key == self.AUTO_KEY or key == self.WEIGHT_AUTO_KEY or self:GetChoice(key) ~= nil
 end
 
 function SharpeningData:GetChoice(key)
@@ -64,9 +75,17 @@ function SharpeningData:GetDuration(stone)
     return (ns.ApiCompat:IsTBC() or stone.itemID == 23122) and 3600 or 1800
 end
 
-function SharpeningData:GetAvailableItem(key)
-    if key == self.AUTO_KEY then
-        for _, enchantID in ipairs(self.autoOrder) do
+function SharpeningData:GetAvailableItem(key, slotID)
+    if key == self.AUTO_KEY or key == self.WEIGHT_AUTO_KEY then
+        local order = self.autoOrder
+        if key == self.WEIGHT_AUTO_KEY then
+            order = self.weightAutoOrder
+        elseif slotID then
+            local kind = ns.ApiCompat:GetWeaponStoneKind(slotID)
+            if not kind then return nil end
+            if kind == "weight" then order = self.weightAutoOrder end
+        end
+        for _, enchantID in ipairs(order) do
             local itemID = self:GetAvailableItem("stone:" .. enchantID)
             if itemID then return itemID end
         end
@@ -83,7 +102,8 @@ function SharpeningData:GetAvailableItem(key)
 end
 
 function SharpeningData:GetOptions()
-    local options = { { value = self.AUTO_KEY, label = self.AUTO_LABEL } }
+    local options = { { value = self.AUTO_KEY, label = self.AUTO_LABEL },
+        { value = self.WEIGHT_AUTO_KEY, label = self.WEIGHT_AUTO_LABEL } }
     for _, enchantID in ipairs(self.order) do
         local key = "stone:" .. enchantID
         local stone = self:GetChoice(key)

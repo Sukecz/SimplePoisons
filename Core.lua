@@ -52,6 +52,7 @@ function Core:OnEvent(event, ...)
     elseif event == "PLAYER_EQUIPMENT_CHANGED"
         or event == "WEAPON_ENCHANT_CHANGED" or event == "WEAPON_SLOT_CHANGED"
         or (event == "UNIT_INVENTORY_CHANGED" and ... == "player") then
+        ns.SecureActions:RefreshAll()
         ns.Buttons:Refresh(true)
     end
 end

@@ -131,3 +131,38 @@ WOW_PROJECT_ID = 2
 assert(not ns.ApiCompat:IsTBC())
 
 print("API compatibility tests passed")
+
+local classID, subclassID = 2, 4
+GetInventoryItemID = function(_, slot) return slot == 16 and 12345 or nil end
+local function instant() return 12345, nil, nil, nil, nil, classID, subclassID end
+for _, modern in ipairs({ false, true }) do
+    C_Item = modern and { GetItemInfoInstant = instant } or nil
+    GetItemInfoInstant = modern and nil or instant
+    for _, subclass in ipairs({ 4, 5, 10, 13 }) do
+        subclassID = subclass
+        assert(ns.ApiCompat:GetWeaponStoneKind(16) == "weight")
+    end
+    for _, subclass in ipairs({ 0, 1, 6, 7, 8, 15 }) do
+        subclassID = subclass
+        assert(ns.ApiCompat:GetWeaponStoneKind(16) == "sharpen")
+    end
+    for _, subclass in ipairs({ 2, 3, 18, 19, 20 }) do
+        subclassID = subclass
+        assert(not ns.ApiCompat:GetWeaponStoneKind(16))
+    end
+    classID, subclassID = 4, 6
+    assert(not ns.ApiCompat:GetWeaponStoneKind(16), "shield is not a stone target")
+    assert(not ns.ApiCompat:GetWeaponStoneKind(17), "empty hand")
+    classID = 2
+end
+GetItemInfoInstant, C_Item = nil, nil
+local requests = 0
+GetItemInfo = function() return "Mace", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, 2, 4 end
+assert(ns.ApiCompat:GetWeaponStoneKind(16) == "weight", "legacy item metadata")
+GetItemInfo = nil
+C_Item = { RequestLoadItemDataByID = function() requests = requests + 1 end,
+    GetItemInfo = function() end }
+assert(not ns.ApiCompat:GetWeaponStoneKind(16) and requests == 1, "request cold metadata")
+C_Item.GetItemInfo = function() return "Mace", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, 2, 5 end
+assert(ns.ApiCompat:GetWeaponStoneKind(16) == "weight", "modern item metadata fallback")
+print("Weapon classification: legacy/modern APIs, all stone weapon classes, shields, empty/cold metadata passed")

@@ -49,14 +49,17 @@ Reference records: [Era Instant VI](https://www.wowhead.com/classic/item=8928),
 Forever API signatures and secure macro support were checked in Blizzard's
 [exported UI sources](https://github.com/Gethe/wow-ui-source/tree/forever/Interface/AddOns).
 
-## Sharpening stone catalog audit (2026-11-06)
+## Weapon stone catalog audit (2026-11-06)
 
 The [complete catalog and duration sources](docs/sharpening-stones.md) cover
 Era/Hardcore, TBC, Forever's additional Elemental item, and SoD variants.
 `SharpeningData.lua` owns stone data; `ApplicationData.lua` combines click
 choices without changing poison rank selection. Stone clicks have no Rogue
 class restriction. The existing hardware-click macros target inventory slot
-16 or 17 and remain frozen in combat. Each stone is chosen explicitly.
+16 or 17 and remain frozen in combat. Stones can be chosen explicitly or
+through Auto, which selects the stone family independently for each weapon.
+All five Classic Weightstones are supported on Era/Hardcore and Forever;
+TBC additionally supports Fel and Adamantite Weightstones.
 
 Monitoring retains exact icon fallbacks, the neutral gray border and no poison
 charge/low-time warnings. Actual remaining time always comes from the client;
@@ -66,7 +69,7 @@ layout changes defer in combat; hidden-hand timers do not keep polling active.
 `tests/test_stone_application.lua` covers every selectable type, all clicks,
 both hands, three clients, per-client durations, alternate item IDs, Warrior
 class eligibility, cold metadata and stock exhaustion. `tests/test_sharpening.lua`
-retains all ten enchant mappings and three API paths. UI tests exercise the real
+retains all seventeen enchant mappings and three API paths. UI tests exercise the real
 dropdown callbacks, single-hand geometry, persistence, combat guards and timers.
 These are simulated checks; live client verification remains required.
 

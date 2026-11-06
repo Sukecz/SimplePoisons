@@ -14,16 +14,19 @@ WOW_PROJECT_BURNING_CRUSADE_CLASSIC, WOW_PROJECT_CAMELOT = 5, 18
 local rows = {
     { 40, 2862, 1800 }, { 13, 2863, 1800 }, { 14, 2871, 1800 },
     { 483, 7964, 1800 }, { 1643, 12404, 1800 }, { 2506, 18262, 1800 },
+    { 19, 3239, 1800 }, { 20, 3240, 1800 }, { 21, 3241, 1800 },
+    { 484, 7965, 1800 }, { 1703, 12643, 1800 },
+    { 2954, 28420, 3600 }, { 2955, 28421, 3600 },
     { 2684, 23122, 3600 }, { 2712, 23528, 3600 }, { 2713, 23529, 3600 },
 }
 for _, project in ipairs({ 2, 5, 18 }) do
     WOW_PROJECT_ID = project
     ns.Database:Initialize({})
-    assert(#ns.SharpeningData:GetOptions() == (project == 5 and 10 or 8))
+    assert(#ns.SharpeningData:GetOptions() == (project == 5 and 18 or 14))
     assert(not ns.ApplicationData:GetAvailableItem("instant"), "Warriors cannot bind poisons")
     for _, row in ipairs(rows) do
         local key, id = "stone:" .. row[1], row[2]
-        local valid = project == 5 or (id ~= 23528 and id ~= 23529)
+        local valid = project == 5 or (id ~= 23528 and id ~= 23529 and id ~= 28420 and id ~= 28421)
         assert(ns.Database:SetClick("LeftButton", key) == valid)
         if valid then
             assert(ns.SharpeningData:GetDuration(ns.SharpeningData:GetChoice(key))
@@ -61,7 +64,7 @@ counts[238241] = 5
 assert(ns.ApplicationData:GetAvailableItem("stone:2684") == 238241)
 assert(ns.ApplicationData:IsAvailableChoice("stone:7098"))
 assert(ns.SharpeningData:GetDuration(ns.SharpeningData:GetChoice("stone:7098")) == 1800)
-assert(#ns.SharpeningData:GetOptions() == 9)
+assert(#ns.SharpeningData:GetOptions() == 15)
 print("Stone application: full Era/TBC/Forever catalog, durations, aliases, Warrior, all clicks and hands passed")
 
 -- Mixed bags: max flat damage ignores situational crit/undead/BFD stones.
@@ -90,6 +93,31 @@ assert(not ns.ApplicationData:GetAvailableItem("stone:auto"))
 assert(ns.ApplicationData:GetItemLabel("stone:auto", 23529) == "Adamantite Sharpening Stone")
 assert(ns.ApplicationData:GetLabel("stone:auto") == ns.SharpeningData.AUTO_LABEL)
 print("Auto stone: mixed stock, client and level restrictions, fallback, persistence and exact item label passed")
+
+-- Weightstone auto has independent stock/level fallback on every client.
+counts = { [28421] = 2, [28420] = 2, [12643] = 2, [7965] = 2, [3239] = 2, [12404] = 2 }
+levels = { [28421] = 60, [28420] = 50, [12643] = 35, [7965] = 25 }
+level = 70
+for _, project in ipairs({ 2, 5, 18 }) do
+    WOW_PROJECT_ID = project
+    ns.Database:Initialize({})
+    assert(ns.Database:SetClick("LeftButton", "weight:auto"))
+    assert(ns.Database:Initialize(SimplePoisonsDB).clicks.LeftButton == "weight:auto")
+    assert(ns.ApplicationData:GetAvailableItem("weight:auto") == (project == 5 and 28421 or 12643))
+end
+WOW_PROJECT_ID = 5
+level = 59
+assert(ns.ApplicationData:GetAvailableItem("weight:auto") == 28420)
+level = 49
+assert(ns.ApplicationData:GetAvailableItem("weight:auto") == 12643)
+counts[12643] = 0
+assert(ns.ApplicationData:GetAvailableItem("weight:auto") == 7965)
+level = 24
+assert(ns.ApplicationData:GetAvailableItem("weight:auto") == 3239)
+counts[3239] = 0
+assert(not ns.ApplicationData:GetAvailableItem("weight:auto"), "never substitute a sharpening stone")
+assert(ns.ApplicationData:GetItemLabel("weight:auto", 28421) == "Adamantite Weightstone")
+print("Weightstone auto: all clients, persistence, level and stock fallback passed")
 
 -- Only Rogues can see or persist poison selections; old Warrior defaults migrate.
 for _, class in ipairs({ "WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DRUID", "MAGE" }) do

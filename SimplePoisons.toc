@@ -2,7 +2,7 @@
 ## Title: SimplePoisons
 ## Notes: Compact weapon buttons for monitoring and applying poisons and sharpening stones.
 ## Author: SimplePoisons Authors
-## Version: 0.2.8
+## Version: 0.2.9
 ## X-Curse-Project-ID: 1660559
 ## OptionalDeps: LibDataBroker-1.1, LibDBIcon-1.0
 ## SavedVariablesPerCharacter: SimplePoisonsDB

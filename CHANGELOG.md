@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9
+
+- Add Rough, Coarse, Heavy, Solid and Dense Weightstones for Era/Hardcore and Forever, plus Fel and Adamantite for TBC, with individual click choices, exact icons, names and remaining timers.
+- Add Weightstone Auto and extend the saved stone Auto choice to select sharpening stones or weightstones independently for each equipped weapon. Refresh on equipment changes, deferring secure updates during combat.
+- Cover all seven weightstones, client restrictions, durations, all clicks/hands, stock and level fallback, weapon metadata, mixed weapons and combat swaps in regression tests.
+
 ## 0.2.8
 
 - Keep the settings gear on the same frame strata as the weapon buttons so it no longer overlays normal game windows.

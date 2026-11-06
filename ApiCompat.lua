@@ -178,6 +178,33 @@ function ApiCompat:GetWeaponTexture(slotID)
     return nil
 end
 
+function ApiCompat:GetWeaponStoneKind(slotID)
+    local itemID = type(GetInventoryItemID) == "function" and GetInventoryItemID("player", slotID)
+    if not itemID then return nil end
+    local classID, subclassID
+    if C_Item and type(C_Item.GetItemInfoInstant) == "function" then
+        classID, subclassID = select(6, C_Item.GetItemInfoInstant(itemID))
+    elseif type(GetItemInfoInstant) == "function" then
+        classID, subclassID = select(6, GetItemInfoInstant(itemID))
+    end
+    if not classID then
+        self:RequestItemData(itemID)
+        if C_Item and type(C_Item.GetItemInfo) == "function" then
+            classID, subclassID = select(12, C_Item.GetItemInfo(itemID))
+        elseif type(GetItemInfo) == "function" then
+            classID, subclassID = select(12, GetItemInfo(itemID))
+        end
+    end
+    if classID ~= 2 then return nil end
+    if subclassID == 4 or subclassID == 5 or subclassID == 10 or subclassID == 13 then
+        return "weight"
+    elseif subclassID == 0 or subclassID == 1 or subclassID == 6 or subclassID == 7
+        or subclassID == 8 or subclassID == 15 then
+        return "sharpen"
+    end
+    return nil
+end
+
 local function normalized(text)
     return type(text) == "string" and string.lower(text) or ""
 end

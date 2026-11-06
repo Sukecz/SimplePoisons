@@ -81,6 +81,9 @@ UIDropDownMenu_AddButton = function(info) menuItems[#menuItems + 1] = info end
 StaticPopupDialogs = {}
 SlashCmdList = {}
 
+GetInventoryItemID = function() return 100 end
+GetItemInfoInstant = function() return 100, nil, nil, nil, nil, 2, 7 end
+
 local ns = {}
 for _, path in ipairs({ "Locales/enUS.lua", "Defaults.lua", "PoisonData.lua", "SharpeningData.lua", "ApiCompat.lua",
     "ApplicationData.lua", "Database.lua", "SecureActions.lua", "Buttons.lua", "MinimapButton.lua", "Options.lua",
@@ -447,6 +450,70 @@ counts[12404] = 5
 ns.Core:OnEvent("BAG_UPDATE_DELAYED")
 assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
 print("Auto stone UI: dropdown, exact tooltip, bag upgrades and combat-safe fallback passed")
+
+-- Mixed weapons select independently and equipment swaps respect combat lockdown.
+local weaponSubclasses = { [100] = 7, [101] = 4 }
+local weapons = { [16] = 100, [17] = 101 }
+GetInventoryItemID = function(_, slot) return weapons[slot] end
+GetItemInfoInstant = function(id) return id, nil, nil, nil, nil, 2, weaponSubclasses[id] end
+counts[12643] = 4
+for _, project in ipairs({ 2, 5, 18 }) do
+    WOW_PROJECT_ID = project
+    ns.Core:OnEvent("PLAYER_EQUIPMENT_CHANGED", 17)
+    assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
+    assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:12643\n/use 17")
+end
+ns.Buttons:ShowTooltip(ns.Buttons.offButton)
+assert(table.concat(tooltipLines, "\n"):find("Dense Weightstone (4 in bags)", 1, true))
+combat = true
+weapons[16], weapons[17] = 101, 100
+ns.Core:OnEvent("PLAYER_EQUIPMENT_CHANGED", 16)
+assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
+assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:12643\n/use 17")
+combat = false
+ns.Core:OnEvent("PLAYER_REGEN_ENABLED")
+assert(main.attributes.macrotext1 == "/use item:12643\n/use 16")
+assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:12404\n/use 17")
+weapons[17] = nil
+ns.Core:OnEvent("UNIT_INVENTORY_CHANGED", "player")
+assert(not ns.Buttons.offButton.attributes.macrotext1, "empty hand has no auto macro")
+weapons[17] = 102
+ns.Core:OnEvent("PLAYER_EQUIPMENT_CHANGED", 17)
+assert(not ns.Buttons.offButton.attributes.macrotext1, "unknown weapon waits for metadata")
+weaponSubclasses[102] = 4
+ns.Core:OnEvent("ITEM_DATA_LOAD_RESULT", 102, true)
+assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:12643\n/use 17")
+selectOption(settings.leftClick, "weight:auto")
+assert(main.attributes.macrotext1 == "/use item:12643\n/use 16")
+print("Mixed weapons: per-hand Auto, all clients, equipment swaps, combat, empty/cold hand and dropdown passed")
+
+for _, project in ipairs({ 2, 5, 18 }) do
+    WOW_PROJECT_ID = project
+    for _, row in ipairs({ { 19, 3239 }, { 20, 3240 }, { 21, 3241 }, { 484, 7965 },
+        { 1703, 12643 }, { 2954, 28420 }, { 2955, 28421 } }) do
+        if project == 5 or row[1] < 2954 then
+            for _, slot in ipairs({ 16, 17 }) do
+                states[slot] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
+                    expirationMS = 65000, charges = 0, enchantID = row[1] }
+            end
+            ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
+            for _, button in ipairs({ main, ns.Buttons.offButton }) do
+                assert(button.icon.texture == "poison:" .. row[2])
+                assert(button.timeText.text == "2m" and button.border[1] == 0.55)
+                assert(not button.warningGlow.shown and not button.missingText.shown)
+                ns.Buttons:ShowTooltip(button)
+                assert(table.concat(tooltipLines, "\n"):find(
+                    ns.SharpeningData:GetByEnchantID(row[1]).label, 1, true))
+            end
+        end
+    end
+end
+for _, slot in ipairs({ 16, 17 }) do
+    states[slot] = { hasWeapon = true, hasEnchant = false, expirationMS = 0, charges = 0 }
+end
+ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
+assert(not anchor.scripts.OnUpdate, "weightstone expiration stops timer polling")
+print("Weightstone UI: all clients/types, both icons, neutral border, tooltip, countdown and expiration passed")
 
 -- The collector's standard path must receive the actual logo, not guess a region.
 -- Supply the libraries after addon initialization to exercise PLAYER_LOGIN retry.

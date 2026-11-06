@@ -9,22 +9,23 @@ function ApplicationData:IsAvailableChoice(key)
         or ns.SharpeningData:IsAvailableChoice(key)
 end
 
-function ApplicationData:GetAvailableItem(key)
+function ApplicationData:GetAvailableItem(key, slotID)
     if ns.SharpeningData:IsAvailableChoice(key) then
-        return ns.SharpeningData:GetAvailableItem(key)
+        return ns.SharpeningData:GetAvailableItem(key, slotID)
     end
     return ns.PoisonData:GetAvailableItem(key)
 end
 
 function ApplicationData:GetLabel(key)
     if key == ns.SharpeningData.AUTO_KEY then return ns.SharpeningData.AUTO_LABEL end
+    if key == ns.SharpeningData.WEIGHT_AUTO_KEY then return ns.SharpeningData.WEIGHT_AUTO_LABEL end
     local stone = ns.SharpeningData:GetChoice(key)
     return stone and stone.label or ns.PoisonData:GetLabel(key)
 end
 
 function ApplicationData:GetItemLabel(key, itemID)
     local stone = ns.SharpeningData:GetChoice(key)
-    if key == ns.SharpeningData.AUTO_KEY then
+    if key == ns.SharpeningData.AUTO_KEY or key == ns.SharpeningData.WEIGHT_AUTO_KEY then
         for _, candidate in pairs(ns.SharpeningData.enchants) do
             if candidate.itemID == itemID then stone = candidate; break end
         end
