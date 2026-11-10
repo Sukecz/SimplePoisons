@@ -132,7 +132,7 @@ function Options:Create()
         return self.frame
     end
     local frame = createBackdropFrame("Frame", "SimplePoisonsOptions", UIParent)
-    frame:SetSize(560, 780)
+    frame:SetSize(560, 810)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
     frame:SetClampedToScreen(true)
@@ -206,7 +206,7 @@ function Options:Create()
         function(value) ns.Database:Set("scale", value) end,
         function(value) return string.format("%.1fx", value) end)
 
-    frame.showHandLabels = createCheckButton(frame, ns.L.SHOW_HAND_LABELS, -543,
+    frame.showHandLabels = createCheckButton(frame, ns.L.SHOW_HAND_LABELS, -730,
         function() return ns.Database:Get("showHandLabels") end,
         function(value)
             if ns.ApiCompat:IsCombatLocked() then
@@ -217,8 +217,6 @@ function Options:Create()
             ns.Database:Set("showHandLabels", value)
             ns.Buttons:ApplyTextStyle()
         end)
-    frame.showHandLabels:ClearAllPoints()
-    frame.showHandLabels:SetPoint("TOPLEFT", 280, -543)
 
     frame.textSize = createSlider(frame, "SimplePoisonsTextSize", ns.L.TEXT_SIZE, -653,
         ns.Ranges.textSize.min, ns.Ranges.textSize.max, 1,

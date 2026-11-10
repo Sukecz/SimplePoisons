@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.11
+
+- Move the Show MH/OH labels option below the other appearance toggles to prevent it from overlapping the button layout selector.
+
 ## 0.2.10
 
 - Add a per-character "Show MH/OH labels" option under Appearance. Hide only the hand labels while keeping timers, charges and weapon buttons visible. Labels stay enabled by default.
