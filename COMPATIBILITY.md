@@ -61,8 +61,10 @@ through Auto, which selects the stone family independently for each weapon.
 All five Classic Weightstones are supported on Era/Hardcore and Forever;
 TBC additionally supports Fel and Adamantite Weightstones.
 
-Monitoring retains exact icon fallbacks, the neutral gray border and no poison
-charge/low-time warnings. Actual remaining time always comes from the client;
+Monitoring retains exact icon fallbacks and a neutral gray border while stones
+have enough time remaining. Recognized stones show an orange border and glow
+below the configured time threshold; charge warnings apply only to poisons.
+Actual remaining time always comes from the client;
 catalog durations label the settings choices only. Single-hand visibility and
 layout changes defer in combat; hidden-hand timers do not keep polling active.
 

@@ -13,10 +13,12 @@ It keeps everything on two buttons:
 - the left button represents the main-hand weapon;
 - the right button represents the off-hand weapon;
 - weapon labels and charges appear above each button, with remaining time below;
-- an orange border means the poison is running low;
+  disable `Show MH/OH labels` under Appearance to hide only the hand labels;
+- an orange border and glow mean the poison or weapon stone is running low;
 - a red border means the weapon has no temporary enchant;
 - a gray border and weapon icon indicate an unidentified or other temporary enchant;
-- active sharpening stones and weightstones show their own icon and remaining time with a gray border;
+- active sharpening stones and weightstones show their own icon and remaining time
+  with a gray border until the low-time warning turns it orange;
 - left, right, and middle click apply three configurable poison families or stones;
 - show both weapon buttons, only the main hand, or only the off hand.
 - a small gear on the pair and an optional `SP` minimap button open settings;
@@ -35,6 +37,7 @@ bound rank and its own stock, including assignments waiting for a combat refresh
 
 The default low warning appears below 3 minutes or below 10 charges. Both
 thresholds are adjustable in the settings window.
+Weapon stones use the same time threshold; the charge threshold applies only to poisons.
 
 Sharpening stones are detected on both weapons: Rough, Coarse, Heavy, Solid,
 Dense, Elemental, Consecrated, Blackfathom where present, and Fel/Adamantite in

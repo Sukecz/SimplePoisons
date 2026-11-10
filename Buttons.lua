@@ -249,6 +249,7 @@ function Buttons:ApplyTextStyle()
     end
     local size = ns.Database:Get("textSize")
     for _, button in ipairs({ self.mainButton, self.offButton }) do
+        button.slotText:SetText(ns.Database:Get("showHandLabels") and button.slotLabel or "")
         applyFontStyle(button.slotText, size)
         applyFontStyle(button.chargeText, size)
         applyFontStyle(button.timeText, size)
@@ -356,17 +357,18 @@ function Buttons:RefreshButton(button)
     else
         local lowTime = state.hasExpirationTime and state.expirationMS < (ns.Database:Get("lowMinutes") * 60000)
         local lowCharges = state.charges > 0 and state.charges < ns.Database:Get("lowCharges")
+        local stone = ns.SharpeningData:GetByEnchantID(state.enchantID)
         button.icon:SetDesaturated(false)
         button.icon:SetAlpha(1)
         button.timeText:SetText(state.hasExpirationTime and formatTime(state.expirationMS) or "")
         button.chargeText:SetText(state.charges > 0 and tostring(state.charges) or "")
         button.missingText:Hide()
-        if not familyKey then
-            setWarning(button)
-            setBackdrop(button, { 0.55, 0.55, 0.55, 1 }, { 0.02, 0.02, 0.02, 0.92 })
-        elseif lowTime or lowCharges then
+        if (familyKey or stone) and (lowTime or (familyKey and lowCharges)) then
             setWarning(button, 1, 0.32, 0.01, 0.30)
             setBackdrop(button, { 1, 0.32, 0.01, 1 }, { 0.48, 0.10, 0.005, 0.98 })
+        elseif not familyKey then
+            setWarning(button)
+            setBackdrop(button, { 0.55, 0.55, 0.55, 1 }, { 0.02, 0.02, 0.02, 0.92 })
         else
             setWarning(button)
             setBackdrop(button, { 0.28, 0.72, 0.32, 1 }, { 0.02, 0.02, 0.02, 0.92 })

@@ -39,6 +39,7 @@ function Database:Initialize(saved)
         hands = (saved.hands == "MAIN" or saved.hands == "OFF") and saved.hands or "BOTH",
         showMinimap = saved.showMinimap ~= false,
         showSettingsIcon = saved.showSettingsIcon ~= false,
+        showHandLabels = saved.showHandLabels ~= false,
         minimapAngle = math.max(0, math.min(359, tonumber(saved.minimapAngle) or defaults.minimapAngle)),
         position = {
             point = VALID_POINTS[position.point] and position.point or defaults.position.point,
@@ -72,7 +73,7 @@ function Database:Set(key, value)
         value = value == "VERTICAL" and "VERTICAL" or "HORIZONTAL"
     elseif key == "hands" then
         value = (value == "MAIN" or value == "OFF") and value or "BOTH"
-    elseif key == "showMinimap" or key == "showSettingsIcon" then
+    elseif key == "showMinimap" or key == "showSettingsIcon" or key == "showHandLabels" then
         value = value and true or false
     elseif key == "minimapAngle" then
         value = math.max(0, math.min(359, tonumber(value) or ns.Defaults.minimapAngle))

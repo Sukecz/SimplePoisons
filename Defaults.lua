@@ -26,6 +26,7 @@ ns.Defaults = {
     hands = "BOTH",
     showMinimap = true,
     showSettingsIcon = true,
+    showHandLabels = true,
     minimapAngle = 225,
     position = {
         point = "CENTER",

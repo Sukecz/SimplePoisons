@@ -206,6 +206,20 @@ function Options:Create()
         function(value) ns.Database:Set("scale", value) end,
         function(value) return string.format("%.1fx", value) end)
 
+    frame.showHandLabels = createCheckButton(frame, ns.L.SHOW_HAND_LABELS, -543,
+        function() return ns.Database:Get("showHandLabels") end,
+        function(value)
+            if ns.ApiCompat:IsCombatLocked() then
+                frame.showHandLabels:Refresh()
+                ns.Core:Print(ns.L.COMBAT_LOCKED)
+                return
+            end
+            ns.Database:Set("showHandLabels", value)
+            ns.Buttons:ApplyTextStyle()
+        end)
+    frame.showHandLabels:ClearAllPoints()
+    frame.showHandLabels:SetPoint("TOPLEFT", 280, -543)
+
     frame.textSize = createSlider(frame, "SimplePoisonsTextSize", ns.L.TEXT_SIZE, -653,
         ns.Ranges.textSize.min, ns.Ranges.textSize.max, 1,
         function() return ns.Database:Get("textSize") end,
@@ -310,6 +324,7 @@ function Options:Refresh()
     self.frame.textSize:Refresh()
     self.frame.showMinimap:Refresh()
     self.frame.showSettingsIcon:Refresh()
+    self.frame.showHandLabels:Refresh()
     self.frame.move:SetText(ns.Buttons.unlocked and ns.L.LOCK or ns.L.UNLOCK)
 end
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.10
+
+- Add a per-character "Show MH/OH labels" option under Appearance. Hide only the hand labels while keeping timers, charges and weapon buttons visible. Labels stay enabled by default.
+- Fix missing orange low-time warnings for sharpening stones and weightstones. All recognized stones now use the configured time threshold, including during combat; missing enchants still show the red warning.
+- Keep unidentified temporary enchants neutral and apply charge warnings only to poisons.
+
 ## 0.2.9
 
 - Add Rough, Coarse, Heavy, Solid and Dense Weightstones for Era/Hardcore and Forever, plus Fel and Adamantite for TBC, with individual click choices, exact icons, names and remaining timers.

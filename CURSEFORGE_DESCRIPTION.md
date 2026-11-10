@@ -33,10 +33,11 @@ Era and Forever regular stones are listed as 30 minutes; TBC stones and Consecra
 ## Clear weapon status
 
 - A neutral green border means the weapon poison is healthy.
-- An orange border means its duration or charges are running low.
+- An orange border and glow mean the poison or weapon stone is running low on time, or a poison is running low on charges.
 - A red border and `MISSING` mean the weapon has no temporary enchant.
 - Choose both weapon icons, main hand only, or off hand only in settings.
-- Active sharpening stones show their own icon, name, and remaining time with a neutral gray border. Click assignments also offer individual sharpening stones with client-specific durations. Warriors and other classes can use stones.
+- Active sharpening stones and weightstones show their own icon, name, and remaining time with a neutral gray border until the low-time warning turns it orange. Click assignments also offer individual stones with client-specific durations. Warriors and other classes can use stones.
+- Disable "Show MH/OH labels" under Appearance to hide the hand labels while keeping timers and charges visible.
 - The default warning thresholds are below 3 minutes or below 10 charges.
 - Both warning thresholds are fully configurable.
 

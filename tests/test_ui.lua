@@ -125,6 +125,26 @@ local anchor = ns.Buttons.anchor
 local settings = ns.Options.frame
 local gear = ns.Buttons.settingsButton
 local minimap = ns.MinimapButton.button
+assert(settings.showHandLabels:GetChecked() and main.slotText.text == "MH")
+assert(ns.Buttons.offButton.slotText.text == "OH")
+local originalTime, originalCharges = main.timeText.text, main.chargeText.text
+settings.showHandLabels:SetChecked(false)
+settings.showHandLabels.scripts.OnClick(settings.showHandLabels)
+assert(main.slotText.text == "" and ns.Buttons.offButton.slotText.text == "")
+assert(main.timeText.text == originalTime and main.chargeText.text == originalCharges)
+assert(main:IsShown() and ns.Buttons.offButton:IsShown(), "only the labels are hidden")
+settings:Hide()
+ns.Options:Open()
+assert(not settings.showHandLabels:GetChecked(), "reopening settings preserves the preference")
+combat = true
+settings.showHandLabels:SetChecked(true)
+settings.showHandLabels.scripts.OnClick(settings.showHandLabels)
+assert(not settings.showHandLabels:GetChecked() and main.slotText.text == "")
+assert(not ns.Database:Get("showHandLabels"), "combat rejects label changes")
+combat = false
+settings.showHandLabels:SetChecked(true)
+settings.showHandLabels.scripts.OnClick(settings.showHandLabels)
+assert(main.slotText.text == "MH" and ns.Buttons.offButton.slotText.text == "OH")
 local layers = { BACKGROUND = 0, BORDER = 1, ARTWORK = 2, OVERLAY = 3, HIGHLIGHT = 4 }
 assert(minimap and minimap:IsShown())
 assert(_G.SimplePoisonsMinimapButtonIcon == minimap.icon, "collectors can resolve the named icon")
@@ -315,7 +335,7 @@ assert(not tooltip:find(ns.L.UNKNOWN_ENCHANT, 1, true))
 assert(not tooltip:find(ns.L.OTHER_ENCHANT, 1, true))
 states[16].expirationMS = 5000
 anchor.scripts.OnUpdate(anchor, 0.2)
-assert(main.timeText.text == "5s" and not main.warningGlow.shown)
+assert(main.timeText.text == "5s" and main.warningGlow.shown and main.border[2] == 0.32)
 states[16] = { hasWeapon = true, hasEnchant = false, expirationMS = 0, charges = 0 }
 anchor.scripts.OnUpdate(anchor, 0.2)
 assert(main.missingText.shown and main.icon.texture == "weapon:16")
@@ -327,9 +347,13 @@ settings.textSize:SetValue(18)
 assert(main.timeText.fontSize == 18)
 settings.showSettingsIcon:SetChecked(false)
 settings.showSettingsIcon.scripts.OnClick(settings.showSettingsIcon)
+settings.showHandLabels:SetChecked(false)
+settings.showHandLabels.scripts.OnClick(settings.showHandLabels)
 StaticPopupDialogs.SIMPLEPOISONS_CONFIRM_RESET.OnAccept()
 assert(main.timeText.fontSize == 13)
 assert(gear:IsShown() and settings.showSettingsIcon:GetChecked(), "reset restores the gear")
+assert(settings.showHandLabels:GetChecked() and main.slotText.text == "MH",
+    "reset restores MH/OH labels")
 
 -- Every supported client's families retain both-hand macros with a cold cache
 -- and false usability, and after item-data completion or revival.
@@ -489,22 +513,36 @@ print("Mixed weapons: per-hand Auto, all clients, equipment swaps, combat, empty
 
 for _, project in ipairs({ 2, 5, 18 }) do
     WOW_PROJECT_ID = project
-    for _, row in ipairs({ { 19, 3239 }, { 20, 3240 }, { 21, 3241 }, { 484, 7965 },
-        { 1703, 12643 }, { 2954, 28420 }, { 2955, 28421 } }) do
-        if project == 5 or row[1] < 2954 then
+    for _, row in ipairs({ { 40, 2862 }, { 13, 2863 }, { 14, 2871 }, { 483, 7964 },
+        { 1643, 12404 }, { 2506, 18262 }, { 2684, 23122 }, { 7098, 211845 },
+        { 2712, 23528 }, { 2713, 23529 }, { 19, 3239 }, { 20, 3240 }, { 21, 3241 },
+        { 484, 7965 }, { 1703, 12643 }, { 2954, 28420 }, { 2955, 28421 } }) do
+        if ns.SharpeningData:GetByEnchantID(row[1]) then
             for _, slot in ipairs({ 16, 17 }) do
                 states[slot] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
-                    expirationMS = 65000, charges = 0, enchantID = row[1] }
+                    expirationMS = 180000, charges = 1, enchantID = row[1] }
             end
             ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
             for _, button in ipairs({ main, ns.Buttons.offButton }) do
                 assert(button.icon.texture == "poison:" .. row[2])
-                assert(button.timeText.text == "2m" and button.border[1] == 0.55)
+                assert(button.timeText.text == "3m" and button.border[1] == 0.55)
                 assert(not button.warningGlow.shown and not button.missingText.shown)
                 ns.Buttons:ShowTooltip(button)
                 assert(table.concat(tooltipLines, "\n"):find(
                     ns.SharpeningData:GetByEnchantID(row[1]).label, 1, true))
             end
+            combat = true
+            for _, slot in ipairs({ 16, 17 }) do
+                states[slot].expirationMS = 179999
+                states[slot].charges = 0
+            end
+            anchor.scripts.OnUpdate(anchor, 0.2)
+            for _, button in ipairs({ main, ns.Buttons.offButton }) do
+                assert(button.warningGlow.shown and button.border[2] == 0.32,
+                    "every known stone warns below the time threshold, including during combat")
+                assert(button.chargeText.text == "")
+            end
+            combat = false
         end
     end
 end
@@ -513,7 +551,7 @@ for _, slot in ipairs({ 16, 17 }) do
 end
 ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
 assert(not anchor.scripts.OnUpdate, "weightstone expiration stops timer polling")
-print("Weightstone UI: all clients/types, both icons, neutral border, tooltip, countdown and expiration passed")
+print("Stone UI: all clients/types, both hands, threshold boundary, orange glow in combat, tooltip and expiration passed")
 
 -- The collector's standard path must receive the actual logo, not guess a region.
 -- Supply the libraries after addon initialization to exercise PLAYER_LOGIN retry.
