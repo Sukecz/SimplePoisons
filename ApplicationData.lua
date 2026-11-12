@@ -17,10 +17,10 @@ function ApplicationData:GetAvailableItem(key, slotID)
 end
 
 function ApplicationData:GetLabel(key)
-    if key == ns.SharpeningData.AUTO_KEY then return ns.SharpeningData.AUTO_LABEL end
-    if key == ns.SharpeningData.WEIGHT_AUTO_KEY then return ns.SharpeningData.WEIGHT_AUTO_LABEL end
+    if key == ns.SharpeningData.AUTO_KEY then return ns.L.AUTO_STONE or ns.SharpeningData.AUTO_LABEL end
+    if key == ns.SharpeningData.WEIGHT_AUTO_KEY then return ns.L.AUTO_WEIGHT or ns.SharpeningData.WEIGHT_AUTO_LABEL end
     local stone = ns.SharpeningData:GetChoice(key)
-    return stone and stone.label or ns.PoisonData:GetLabel(key)
+    return stone and ns.SharpeningData:GetLabel(stone) or ns.PoisonData:GetLabel(key)
 end
 
 function ApplicationData:GetItemLabel(key, itemID)
@@ -42,4 +42,24 @@ function ApplicationData:GetOptions()
         options[#options + 1] = option
     end
     return options
+end
+
+function ApplicationData:GetPreview(key, slotID)
+    local itemID = self:GetAvailableItem(key, slotID or 16)
+    local stone = ns.SharpeningData:GetChoice(key)
+    if not itemID then
+        if stone then
+            itemID = ns.SharpeningData:GetItemIDs(stone)[1]
+        elseif key == ns.SharpeningData.AUTO_KEY or key == ns.SharpeningData.WEIGHT_AUTO_KEY then
+            local weight = key == ns.SharpeningData.WEIGHT_AUTO_KEY
+                or ns.ApiCompat:GetWeaponStoneKind(slotID or 16) == "weight"
+            itemID = weight and 12643 or 12404
+        else
+            local ids = ns.PoisonData:GetItemIDs(key)
+            itemID = ids[#ids]
+        end
+    end
+    local icon = itemID and ns.ApiCompat:GetItemIcon(itemID)
+    if not icon and stone then icon = ns.SharpeningData:GetIcon(stone) end
+    return icon or "Interface\\Icons\\Ability_Poisons", itemID
 end

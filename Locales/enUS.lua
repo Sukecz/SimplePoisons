@@ -24,7 +24,7 @@ ns.L = {
     RIGHT_CLICK = "Right Click",
     MIDDLE_CLICK = "Middle Click",
     SETTINGS = "Settings",
-    CLICK_ASSIGNMENTS = "Click assignments",
+    CLICK_ASSIGNMENTS = "Assignments",
     WARNING_THRESHOLDS = "Low poison / stone warning",
     APPEARANCE = "Appearance",
     LOW_TIME = "Low below this time",
@@ -57,3 +57,38 @@ ns.L = {
     CANCEL = "Cancel",
     HELP = "Commands: /sp opens settings; /sp move unlocks the buttons; /sp lock saves their position; /sp reset restores defaults; /sp api prints compatibility details.",
 }
+
+ns.L.BUTTON4 = "Mouse button 4"
+ns.L.BUTTON5 = "Mouse button 5"
+ns.L.ADD_SLOT = "+ Add slot"
+ns.L.AUTO_STONE = "Weapon Stone (Auto: max damage)"
+ns.L.AUTO_WEIGHT = "Weightstone (Auto: max damage)"
+ns.L.MINUTES = "%d min"
+ns.L.POISON_instant = "Instant Poison"
+ns.L.POISON_deadly = "Deadly Poison"
+ns.L.POISON_crippling = "Crippling Poison"
+ns.L.POISON_wound = "Wound Poison"
+ns.L.POISON_mindNumbing = "Mind-numbing Poison"
+ns.L.POISON_anesthetic = "Anesthetic Poison"
+
+ns.L.SETTINGS_SUBTITLE = "Weapon enhancements, your way. Choose an effect, capture a binding, and keep both hands ready."
+ns.L.EFFECT = "Poison / weapon stone"
+ns.L.BINDING = "Binding"
+ns.L.TARGET = "Weapon"
+ns.L.SET_BINDING = "Set binding"
+ns.L.CLICKED_WEAPON = "Clicked weapon"
+ns.L.SLOT_PAGE = "Page %d / %d · %d assignments"
+ns.L.CHOOSE_EFFECT = "Choose a poison or weapon stone"
+ns.L.EFFECT_HINT = "Hover an icon for the item tooltip. Click a card to select it."
+ns.L.BINDING_HINT = "Mouse: click a weapon button. Keyboard shortcuts: use anywhere."
+ns.L.CAPTURE_HINT = "Press a key or roll the mouse wheel. To bind a mouse click, use the area below. Esc cancels."
+ns.L.CLICK_TO_CAPTURE = "Click here to capture a mouse button"
+ns.L.BIND_CONFLICT = "Currently assigned to %s. Assign overrides it while SimplePoisons is enabled."
+ns.L.BIND_SAVE_HINT = "Click Assign to save. Your original WoW bindings are not changed."
+ns.L.ASSIGN = "Assign"
+ns.L.CLEAR_BINDING = "Clear binding"
+ns.L.DUPLICATE_BIND = "This binding is already used by another assignment."
+ns.L.NATIVE_OPTIONS = "Open the full settings window to edit effects, bindings and appearance."
+ns.L.OPEN_SETTINGS = "Open settings"
+
+ns.L.EXISTING_BINDING = "another action"

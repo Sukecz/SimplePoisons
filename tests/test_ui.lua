@@ -4,11 +4,23 @@ local methods = {}
 local function widget(name)
     local object = setmetatable({ scripts = {}, name = name }, { __index = methods })
     if name then _G[name] = object end
+    if SIMPLEPOISONS_WIDGETS then
+        object.id = #SIMPLEPOISONS_WIDGETS + 1
+        SIMPLEPOISONS_WIDGETS[object.id] = object
+    end
     return object
 end
 local function protectedChange(self)
     assert(not (combat and self.protected), "protected layout mutated during combat")
 end
+function methods:Enable() self.enabled = true end
+function methods:Disable() self.enabled = false end
+function methods:EnableKeyboard(value) self.keyboardEnabled = value end
+function methods:EnableMouseWheel(value) self.wheelEnabled = value end
+function methods:SetPropagateKeyboardInput(value) self.propagate = value end
+function methods:SetVerticalScroll(value) self.scroll = value end
+function methods:GetVerticalScroll() return self.scroll or 0 end
+function methods:SetScrollChild(child) self.scrollChild = child end
 function methods:SetScript(event, callback) self.scripts[event] = callback end
 function methods:RegisterEvent(event) self.events = self.events or {}; self.events[event] = true end
 function methods:UnregisterEvent(event) self.events[event] = nil end
@@ -42,10 +54,13 @@ function methods:SetAttribute(key, value)
 end
 function methods:CreateTexture(name, layer)
     local texture = widget(name)
+    texture.parent, texture.kind = self, "Texture"
     texture.layer = layer
     return texture
 end
-function methods:CreateFontString() return widget() end
+function methods:CreateFontString(_, _, font)
+    local label = widget(); label.parent, label.kind, label.font = self, "Text", font; return label
+end
 function methods:GetHighlightTexture() return widget() end
 for _, name in ipairs({
     "SetMovable", "SetClampedToScreen", "RegisterForClicks", "RegisterForDrag", "EnableMouse",
@@ -56,28 +71,60 @@ for _, name in ipairs({
     "StopMovingOrSizing",
 }) do methods[name] = function() end end
 
+function methods:SetWidth(value) self.width = value end
+function methods:SetHeight(value) self.height = value end
+function methods:SetAlpha(value) self.alpha = value end
+function methods:SetFrameStrata(value) self.strata = value end
+function methods:SetBackdrop(value) self.backdrop = value end
+function methods:SetBackdropColor(...) self.background = { ... } end
+function methods:SetTextColor(...) self.color = { ... } end
+function methods:StartMoving() protectedChange(self); self.moving = true end
+function methods:StopMovingOrSizing() protectedChange(self); self.moving = false end
+
 UIParent = widget()
 Minimap = widget()
 BackdropTemplateMixin = {}
-CreateFrame = function(_, name, parent, template)
+CreateFrame = function(kind, name, parent, template)
     local frame = widget(name)
+    frame.kind, frame.parent, frame.template = kind, parent, template
     if template and template:find("SecureActionButtonTemplate", 1, true) then
         frame.protected = true
         parent.protected = true
     elseif template == "OptionsSliderTemplate" then
-        widget(name .. "Low"); widget(name .. "High"); widget(name .. "Text")
+        frame.height = 16
+        for _, suffix in ipairs({ "Low", "High", "Text" }) do
+            local label = widget(name .. suffix)
+            label.kind, label.parent, label.font = "Text", frame, "GameFontHighlightSmall"
+            label.width, label.height = suffix == "Text" and 278 or 35, 18
+            label:SetPoint(suffix == "High" and "TOPRIGHT" or "TOPLEFT", 0, suffix == "Text" and 23 or -17)
+        end
     elseif template == "InterfaceOptionsCheckButtonTemplate" then
+        frame.width, frame.height = 26, 26
         frame.Text = widget()
+        frame.Text.kind, frame.Text.parent, frame.Text.font = "Text", frame, "GameFontHighlightSmall"
+        frame.Text:SetPoint("LEFT", frame, "RIGHT", 0, 0)
     end
     return frame
 end
-UIDropDownMenu_SetWidth = function() end
+UIDropDownMenu_SetWidth = function(frame, width) frame.width, frame.height = width + 50, 32 end
 UIDropDownMenu_SetSelectedValue = function() end
-UIDropDownMenu_SetText = function() end
-UIDropDownMenu_Initialize = function(frame, initialize) frame.initialize = initialize end
-UIDropDownMenu_CreateInfo = function() return {} end
+UIDropDownMenu_SetText = function(frame, value) frame.text = value end
 local menuItems
-UIDropDownMenu_AddButton = function(info) menuItems[#menuItems + 1] = info end
+UIDropDownMenu_Initialize = function(frame, initialize)
+    frame.initialize = initialize
+    local previous = menuItems
+    menuItems = {}
+    -- Blizzard immediately calls (self, level, menuList), even during creation.
+    initialize(frame, nil, nil)
+    menuItems = previous
+end
+UIDropDownMenu_CreateInfo = function() return {} end
+UIDropDownMenu_AddButton = function(info, level)
+    assert(level == nil or type(level) == "number", "dropdown level must not be a frame")
+    menuItems[#menuItems + 1] = info
+end
+local nativeCategories = {}
+InterfaceOptions_AddCategory = function(category) nativeCategories[#nativeCategories + 1] = category end
 StaticPopupDialogs = {}
 SlashCmdList = {}
 
@@ -85,10 +132,12 @@ GetInventoryItemID = function() return 100 end
 GetItemInfoInstant = function() return 100, nil, nil, nil, nil, 2, 7 end
 
 local ns = {}
-for _, path in ipairs({ "Locales/enUS.lua", "Defaults.lua", "PoisonData.lua", "SharpeningData.lua", "ApiCompat.lua",
-    "ApplicationData.lua", "Database.lua", "SecureActions.lua", "Buttons.lua", "MinimapButton.lua", "Options.lua",
-    "SlashCommands.lua", "Core.lua" }) do
-    assert(loadfile(path))("SimplePoisons", ns)
+-- Load the shipped runtime order instead of maintaining a second file list.
+for line in io.lines("SimplePoisons.toc") do
+    if line:match("^[^#%s].*%.lua$") then
+        local path = line:gsub("\\", "/")
+        assert(loadfile(path))("SimplePoisons", ns)
+    end
 end
 local states = {
     [16] = { hasWeapon = true, hasEnchant = false, expirationMS = 0, charges = 0 },
@@ -108,6 +157,7 @@ end
 IsUsableItem = function() return false end
 C_Item = { IsUsableItem = function() return false end }
 local reads = 0
+local realGetWeaponState = ns.ApiCompat.GetWeaponState
 ns.ApiCompat.IsCombatLocked = function() return combat end
 ns.ApiCompat.IsRogue = function() return true end
 ns.ApiCompat.GetWeaponState = function(_, slot) reads = reads + 1; return states[slot] end
@@ -233,6 +283,7 @@ GameTooltip = {
     AddLine = function(_, text) tooltipLines[#tooltipLines + 1] = text end,
     AddDoubleLine = function(_, _, text) tooltipLines[#tooltipLines + 1] = text end,
     Show = function() end,
+    Hide = function() end,
 }
 ns.Buttons:ShowTooltip(main)
 local tooltip = table.concat(tooltipLines, "\n")
@@ -396,8 +447,9 @@ print("UI combat, tooltip, rank refresh, enchant state, and timer lifecycle test
 
 -- Exercise the real dropdown callbacks, persisted one-hand layout and combat guard.
 local function selectOption(dropdown, value)
+    if dropdown.Select then dropdown:Select(value); return end
     menuItems = {}
-    dropdown.initialize()
+    dropdown:initialize()
     for _, item in ipairs(menuItems) do
         if item.value == value then item.func(); return end
     end
@@ -610,3 +662,220 @@ assert(loadfile("MinimapButton.lua"))("SimplePoisons", fresh)
 assert(fresh.MinimapButton:Create() == libraryButton)
 assert(fresh.MinimapButton.library == library)
 print("LibDBIcon: actual logo, late/early library registration, click/tooltip, visibility, drag, reset and no duplicates passed")
+
+-- Exercise the dynamic slot UI, including the nested modifier menu.
+ns.ApiCompat.IsRogue = function() return true end
+WOW_PROJECT_ID = 2
+ns.Database:Reset()
+ns.Options:Refresh()
+ns.SecureActions:RefreshAll()
+local function selectBind(control, bind)
+    control.scripts.OnClick()
+    if ns.ApiCompat:IsCombatLocked() then return end
+    ns.Options:SetCandidate(bind)
+    ns.Options.capture.save.scripts.OnClick()
+end
+assert(#ns.Database:GetSlots() == 3 and #settings.slotRows == 3)
+for index, bind in ipairs({ 'shift-LeftButton', 'ctrl-RightButton', 'alt-MiddleButton' }) do
+    selectBind(settings.slotRows[index].bind, bind)
+    assert(ns.Database:GetSlots()[index].bind == bind)
+end
+assert(not main.attributes.macrotext1 and not main.attributes.macrotext2 and not main.attributes.macrotext3)
+settings.addSlot.scripts.OnClick()
+assert(#ns.Database:GetSlots() == 4 and settings.slotRows[4]:IsShown())
+assert(ns.Database:GetSlots()[4].bind == '')
+selectBind(settings.slotRows[4].bind, 'LeftButton')
+selectOption(settings.slotRows[4].choice, 'wound')
+assert(ns.Database:GetClick('LeftButton') == 'wound')
+assert(not settings.slotScroll, 'assignments do not use a three-row scrollbar')
+combat = true
+settings.addSlot.scripts.OnClick()
+settings.slotRows[1].remove.scripts.OnClick()
+selectBind(settings.slotRows[1].bind, 'Button5')
+assert(#ns.Database:GetSlots() == 4 and ns.Database:GetSlots()[1].bind == 'shift-LeftButton')
+combat = false
+settings.slotRows[4].remove.scripts.OnClick()
+assert(#ns.Database:GetSlots() == 3 and not settings.slotRows[4]:IsShown())
+assert(ns.Options.page == 1, 'the first page remains visible')
+assert(not main.attributes.macrotext1, 'removing a row clears the associated action')
+ns.Database:Initialize(SimplePoisonsDB)
+ns.Options:Refresh()
+assert(ns.Database:GetSlots()[1].bind == 'shift-LeftButton')
+settings.slotRows[1].remove.scripts.OnClick()
+settings.slotRows[1].remove.scripts.OnClick()
+settings.slotRows[1].remove.scripts.OnClick()
+assert(#ns.Database:GetSlots() == 1 and settings.slotRows[1]:IsShown())
+print('Slot UI: add/remove, every default bind editable, binding capture, choice persistence, wide layout, combat and stale actions passed')
+
+
+-- Combat can start between the mouse press and release of a move operation.
+combat = false
+ns.Options:Open()
+ns.Buttons:SetUnlocked(true)
+ns.Buttons.moveHandle.scripts.OnDragStart()
+assert(anchor.moving)
+combat = true
+ns.Buttons.moveHandle.scripts.OnDragStop()
+settings:Hide()
+assert(anchor.moving, 'protected move stop must be deferred during combat')
+combat = false
+ns.Core:OnEvent('PLAYER_REGEN_ENABLED')
+assert(not anchor.moving and not ns.Buttons.unlocked and not ns.Buttons.moveControls:IsShown(),
+    'finish the drag and lock after combat even if settings were closed')
+
+-- Hiding the fallback minimap button while dragging must stop its polling.
+legacyMinimap.scripts.OnDragStart()
+assert(legacyMinimap.scripts.OnUpdate)
+legacyMinimap:Hide()
+assert(not legacyMinimap.scripts.OnUpdate, 'hidden minimap buttons must not keep an OnUpdate')
+print('Audit: mid-drag combat, closing settings in combat and minimap drag cleanup passed')
+
+-- Cold first login: equipment becomes available after all initial events,
+-- without a subsequent inventory event or active enchant timer to refresh it.
+local scheduled = {}
+C_Timer = { After = function(delay, callback)
+    assert(delay > 0)
+    scheduled[#scheduled + 1] = callback
+end }
+local function runDelayed()
+    local pending = scheduled
+    scheduled = {}
+    for _, callback in ipairs(pending) do callback() end
+end
+local inventoryLoaded, enchantLoaded = false, false
+C_Item, C_PaperDollInfo, Enum = nil, nil, nil
+GetInventoryItemID = function(_, slot)
+    return inventoryLoaded and slot == 16 and 100 or nil
+end
+GetWeaponEnchantInfo = function()
+    return enchantLoaded, enchantLoaded and 120000 or 0, 0, enchantLoaded and 625 or nil,
+        false, 0, 0, nil
+end
+ns.ApiCompat.GetWeaponState = function(self, slot)
+    reads = reads + 1
+    return realGetWeaponState(self, slot)
+end
+ns.Core:OnEvent('PLAYER_LOGIN')
+ns.Core:OnEvent('PLAYER_ENTERING_WORLD', true, false)
+assert(main.missingText.text == ns.L.NO_WEAPON and not anchor.scripts.OnUpdate)
+assert(#scheduled == 1, 'cold login must schedule a bounded equipment recheck')
+-- Data appears without an event. Missing poison is different from missing weapon.
+inventoryLoaded = true
+runDelayed()
+assert(main.state.hasWeapon and main.missingText.text == ns.L.MISSING)
+-- An actually empty off hand must not keep retrying forever.
+local retries = 1
+while #scheduled > 0 do
+    runDelayed()
+    retries = retries + 1
+    assert(retries <= 6, 'startup retries must be finite with empty slots')
+end
+assert(not anchor.scripts.OnUpdate and not ns.Core.frame.scripts.OnUpdate)
+-- Repeated world entries invalidate old callbacks; leaving cancels the chain.
+ns.Core:OnEvent('PLAYER_ENTERING_WORLD', false, false)
+ns.Core:OnEvent('PLAYER_ENTERING_WORLD', false, false)
+local before = reads
+runDelayed()
+assert(reads == before + 2, 'only the newest world entry may refresh equipment')
+ns.Core:OnEvent('PLAYER_LEAVING_WORLD')
+before = reads
+runDelayed()
+assert(reads == before and #scheduled == 0)
+-- A delayed retry in combat updates the display but defers protected actions.
+ns.Core:OnEvent('PLAYER_ENTERING_WORLD', true, false)
+combat = true
+enchantLoaded = true
+runDelayed()
+assert(main.familyKey == 'instant' and ns.SecureActions.refreshPending)
+combat = false
+ns.Core:OnEvent('PLAYER_REGEN_ENABLED')
+assert(not ns.SecureActions.refreshPending)
+while #scheduled > 0 do runDelayed() end
+C_Timer = nil
+print('Cold login: delayed equipment without events, bounded retries, empty hand, world transitions and combat passed')
+
+
+do
+    assert(#nativeCategories == 1 and nativeCategories[1].name == 'SimplePoisons')
+    settings:Hide()
+    nativeCategories[1].open.scripts.OnClick()
+    assert(settings:IsShown(), 'the native Interface/AddOns entry opens full settings')
+    local modern, registrations = {}, 0
+    Settings = {
+        RegisterCanvasLayoutCategory = function(canvas, name)
+            assert(canvas == ns.Options.categoryPanel and name == 'SimplePoisons')
+            return modern
+        end,
+        RegisterAddOnCategory = function(category) assert(category == modern); registrations = registrations + 1 end,
+    }
+    ns.Options.category = nil
+    ns.Options:RegisterCategory()
+    ns.Options:RegisterCategory()
+    assert(registrations == 1 and ns.Options.category == modern)
+    Settings = nil
+    assert(settings.width == 1120 and settings.height == 720 and not settings.slotScroll)
+    ns.Database:Reset()
+    for index = 1, 6 do ns.Database:AddSlot() end
+    ns.Options.page = 1
+    ns.Options:Refresh()
+    assert(settings.slotRows[8]:IsShown() and not settings.slotRows[9]:IsShown())
+    settings.next.scripts.OnClick()
+    assert(settings.slotRows[9]:IsShown() and not settings.slotRows[1]:IsShown())
+    settings.previous.scripts.OnClick()
+    ns.Options:OpenPicker(1)
+    assert(ns.Options.picker:IsShown() and ns.Options.picker.cards[1].icon.texture)
+    local card = ns.Options.picker.cards[2]
+    card.scripts.OnClick(card)
+    assert(ns.Database:GetSlots()[1].choice == card.value and not ns.Options.picker:IsShown())
+    ns.Options:BeginCapture(1)
+    local capture = ns.Options.capture
+    assert(capture.keyboardEnabled and capture.propagate == false)
+    capture.scripts.OnKeyDown(capture, 'LSHIFT')
+    assert(ns.Options.candidate == 'LeftButton', 'a modifier alone does not change the binding')
+    capture.scripts.OnKeyDown(capture, 'F8')
+    assert(ns.Options.candidate == 'key:F8')
+    capture.save.scripts.OnClick()
+    assert(ns.Database:GetSlots()[1].bind == 'key:F8' and not capture.keyboardEnabled)
+    assert(not settings.slotRows[1].target, 'the assignment table has no Weapon control')
+    ns.Options:BeginCapture(1)
+    assert(capture.target:IsShown() and capture.targetLabel:IsShown())
+    capture.target.scripts.OnClick()
+    assert(ns.Database:GetSlots()[1].target == 16, 'editing the hand waits for Assign')
+    capture.save.scripts.OnClick()
+    assert(ns.Database:GetSlots()[1].target == 17)
+    ns.Options:BeginCapture(1)
+    capture.target.scripts.OnClick()
+    capture.cancel.scripts.OnClick()
+    assert(ns.Database:GetSlots()[1].target == 17, 'cancel preserves the saved hand')
+    ns.Options:BeginCapture(2)
+    assert(not capture.target:IsShown() and not capture.targetLabel:IsShown(), 'mouse bindings have no hand selector')
+    capture.scripts.OnKeyDown(capture, 'F8')
+    assert(capture.target:IsShown(), 'only a keyboard candidate reveals the hand selector')
+    capture.save.scripts.OnClick()
+    assert(ns.Database:GetSlots()[2].bind == 'RightButton' and capture.warning.text == ns.L.DUPLICATE_BIND)
+    capture.scripts.OnKeyDown(capture, 'ESCAPE')
+    assert(not capture.keyboardEnabled and not capture:IsShown())
+    ns.Options:BeginCapture(2)
+    capture.area.scripts.OnMouseDown(capture.area, 'LeftButton')
+    assert(ns.Options.candidate == 'LeftButton', 'ordinary mouse clicks are captured in the dedicated area')
+    assert(not capture.target:IsShown(), 'switching to a mouse click hides the hand selector')
+    capture.save.scripts.OnClick()
+    assert(ns.Database:GetSlots()[2].bind == 'LeftButton')
+    ns.Options:BeginCapture(2)
+    capture.scripts.OnMouseWheel(capture, -1)
+    assert(ns.Options.candidate == 'key:MOUSEWHEELDOWN')
+    capture.clear.scripts.OnClick()
+    capture.save.scripts.OnClick()
+    assert(ns.Database:GetSlots()[2].bind == '')
+    ns.Options:BeginCapture(2)
+    combat = true
+    ns.Core:OnEvent('PLAYER_REGEN_DISABLED')
+    assert(not capture.keyboardEnabled and not capture:IsShown())
+    combat = false
+    ns.Options:BeginCapture(2)
+    settings:Hide()
+    assert(not capture.keyboardEnabled)
+    print('Redesign: native options old/new APIs, 8 visible rows, paging, icon picker, key/click/wheel capture, duplicates, target and capture cleanup passed')
+end
+
+if SIMPLEPOISONS_PREVIEW then SIMPLEPOISONS_PREVIEW(ns) end

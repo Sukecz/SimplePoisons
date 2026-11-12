@@ -116,3 +116,30 @@ LibDBIcon position/hide settings bridge to existing per-character values;
 negative drag angles normalize to 0–359 and reset follows the new database table.
 Library-managed positioning is left to its public API. Reference:
 [LibDBIcon registration and visibility API](https://www.wowace.com/projects/libdbicon-1-0).
+
+
+## Configurable assignments and localization (0.3.0)
+
+All clients share the assignment schema and locale loading order. Existing
+three-click settings migrate to editable rows without resetting their choices.
+Mouse bindings route through the weapon button clicked. Optional global keyboard
+and wheel bindings route through named secure buttons to the hand chosen in the
+binding dialog; the settings table has no Weapon column. Temporary overrides do
+not rewrite the player's saved game bindings. Old overrides and macros are
+cleared when assignments change outside combat. Mouse and keyboard assignments
+for the same item family can coexist.
+
+The wide settings window is reachable through the native AddOns settings list
+using either legacy or modern category APIs. Locale tests cover translated text,
+printf signatures, ID-based application and simulated localized tooltip data;
+they are not a native-speaker review or live proof on each localized client.
+
+World entry starts five finite equipment refreshes over 15.5 seconds, then stops.
+Leaving the world invalidates the pending chain. Empty weapon slots never cause
+permanent retries, and delayed secure refreshes remain deferred in combat.
+
+Additional live checks for 0.3.0: capture a plain mouse click, a modified click,
+a global keyboard shortcut and a wheel direction; test each on the intended
+weapon, replace/remove them, reload, and verify original game bindings return
+when overrides are removed. Confirm both input methods can apply the same poison
+through separate assignments. Repeat cold login and inspect translated layouts.

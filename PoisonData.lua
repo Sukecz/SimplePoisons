@@ -99,7 +99,7 @@ end
 
 function PoisonData:GetLabel(key)
     local family = self:GetFamily(key)
-    return family and family.label or ns.L.NONE
+    return family and (ns.L["POISON_" .. key] or family.label) or ns.L.NONE
 end
 
 function PoisonData:GetFamilyByEnchantID(enchantID)
@@ -198,7 +198,7 @@ function PoisonData:GetOptions()
     for _, key in ipairs(self.order) do
         local family = self.families[key]
         if self:IsAvailableFamily(key) then
-            items[#items + 1] = { value = key, label = family.label }
+            items[#items + 1] = { value = key, label = self:GetLabel(key) }
         end
     end
     return items

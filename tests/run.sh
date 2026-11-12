@@ -32,9 +32,9 @@ diff -u \
 grep -qx '## Interface: 11509' SimplePoisons.toc
 grep -qx '## Interface: 20506' SimplePoisons_TBC.toc
 grep -qx '## Interface: 16001' SimplePoisons_Camelot.toc
-grep -qx '## Version: 0.2.11' SimplePoisons.toc
-grep -qx '## Version: 0.2.11' SimplePoisons_TBC.toc
-grep -qx '## Version: 0.2.11' SimplePoisons_Camelot.toc
+grep -qx '## Version: 0.3.0' SimplePoisons.toc
+grep -qx '## Version: 0.3.0' SimplePoisons_TBC.toc
+grep -qx '## Version: 0.3.0' SimplePoisons_Camelot.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons_TBC.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons_Camelot.toc
@@ -55,6 +55,7 @@ if grep -RInF --exclude-dir=.git "$obsolete_slash" .; then
 fi
 file assets/minimap-icon.tga | grep -Fq '256 x 256 x 32'
 test -f assets/logo-wide.png
+file assets/logo-header.tga | grep -Fq '512 x 256 x 32'
 file assets/logo-wide-ui.tga | grep -Fq '512 x 288 x 24'
 test -f assets/logo-1-1.png
 test -f LICENSE

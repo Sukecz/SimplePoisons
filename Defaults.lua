@@ -1,7 +1,7 @@
 local addonName, ns = ...
 
 ns.Constants = {
-    SCHEMA_VERSION = 2,
+    SCHEMA_VERSION = 4,
     MAIN_HAND_SLOT = 16,
     OFF_HAND_SLOT = 17,
     BUTTON_SIZE = 48,

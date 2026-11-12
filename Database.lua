@@ -49,6 +49,25 @@ function Database:Initialize(saved)
         },
     }
 
+    self.data.slots = {}
+    local seen = {}
+    if type(saved.slots) == "table" then
+        for _, slot in ipairs(saved.slots) do
+            if type(slot) == "table" and ns.Bindings:IsValid(slot.bind) and (slot.bind == "" or not seen[slot.bind]) then
+                self.data.slots[#self.data.slots + 1] = {
+                    bind = slot.bind, choice = validChoice(slot.choice, defaults.clicks.LeftButton),
+                    target = slot.target == 17 and 17 or 16,
+                }
+                seen[slot.bind] = true
+            end
+        end
+    end
+    if #self.data.slots == 0 then
+        for _, bind in ipairs({ "LeftButton", "RightButton", "MiddleButton" }) do
+            self.data.slots[#self.data.slots + 1] = { bind = bind, choice = self.data.clicks[bind] }
+        end
+    end
+    self:SyncClicks()
     SimplePoisonsDB = self.data
     return self.data
 end
@@ -84,15 +103,57 @@ function Database:Set(key, value)
     return true
 end
 
-function Database:GetClick(mouseButton)
-    return self.data and self.data.clicks[mouseButton]
+-- Legacy accessors remain for callers; slots are authoritative after migration.
+function Database:SyncClicks()
+    self.data.clicks = {}
+    for _, slot in ipairs(self.data.slots) do
+        if slot.bind ~= "" then self.data.clicks[slot.bind] = slot.choice end
+    end
 end
 
-function Database:SetClick(mouseButton, familyKey)
-    if not self.data or not self.data.clicks[mouseButton] or not ns.ApplicationData:IsAvailableChoice(familyKey) then
-        return false
+function Database:GetSlots()
+    return self.data.slots
+end
+
+function Database:GetClick(bind)
+    return self.data and self.data.clicks[bind]
+end
+
+function Database:SetSlot(index, bind, choice, target)
+    if ns.ApiCompat.IsCombatLocked and ns.ApiCompat:IsCombatLocked() then return false end
+    local slots = self.data.slots
+    if not slots[index] or not ns.Bindings:IsValid(bind)
+        or not ns.ApplicationData:IsAvailableChoice(choice) then return false end
+    for other, slot in ipairs(slots) do
+        if bind ~= "" and other ~= index and slot.bind == bind then return false end
     end
-    self.data.clicks[mouseButton] = familyKey
+    slots[index] = { bind = bind, choice = choice,
+        target = (target or slots[index].target) == 17 and 17 or 16 }
+    self:SyncClicks()
+    return true
+end
+
+function Database:SetClick(bind, choice)
+    for index, slot in ipairs(self.data.slots) do
+        if slot.bind == bind then return self:SetSlot(index, bind, choice) end
+    end
+    return false
+end
+
+function Database:AddSlot()
+    if ns.ApiCompat.IsCombatLocked and ns.ApiCompat:IsCombatLocked() then return false end
+    if #self.data.slots >= 40 then return false end
+    self.data.slots[#self.data.slots + 1] = {
+        bind = "", choice = validChoice(ns.Defaults.clicks.LeftButton, ns.Defaults.clicks.LeftButton), target = 16,
+    }
+    self:SyncClicks()
+    return true
+end
+
+function Database:RemoveSlot(index)
+    if (ns.ApiCompat.IsCombatLocked and ns.ApiCompat:IsCombatLocked()) or #self.data.slots <= 1 or not self.data.slots[index] then return false end
+    table.remove(self.data.slots, index)
+    self:SyncClicks()
     return true
 end
 

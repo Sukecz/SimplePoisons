@@ -1,5 +1,5 @@
 local ns = {}
-for _, path in ipairs({ "Locales/enUS.lua", "Defaults.lua", "ApiCompat.lua", "PoisonData.lua",
+for _, path in ipairs({ "Locales/enUS.lua", "Defaults.lua", "Bindings.lua", "ApiCompat.lua", "PoisonData.lua",
     "SharpeningData.lua", "ApplicationData.lua", "Database.lua", "SecureActions.lua" }) do
     assert(loadfile(path))("SimplePoisons", ns)
 end

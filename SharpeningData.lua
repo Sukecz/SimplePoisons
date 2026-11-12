@@ -32,6 +32,10 @@ function SharpeningData:GetByEnchantID(enchantID)
     return nil
 end
 
+function SharpeningData:GetLabel(stone)
+    return ns.ApiCompat:GetItemName(stone.itemID) or stone.label
+end
+
 function SharpeningData:GetIcon(stone)
     -- Exact fallback also works before item data loads, with empty bags or dead.
     return ns.ApiCompat:GetItemIcon(stone.itemID) or ("Interface\\Icons\\" .. stone.icon)
@@ -102,14 +106,14 @@ function SharpeningData:GetAvailableItem(key, slotID)
 end
 
 function SharpeningData:GetOptions()
-    local options = { { value = self.AUTO_KEY, label = self.AUTO_LABEL },
-        { value = self.WEIGHT_AUTO_KEY, label = self.WEIGHT_AUTO_LABEL } }
+    local options = { { value = self.AUTO_KEY, label = ns.L.AUTO_STONE or self.AUTO_LABEL },
+        { value = self.WEIGHT_AUTO_KEY, label = ns.L.AUTO_WEIGHT or self.WEIGHT_AUTO_LABEL } }
     for _, enchantID in ipairs(self.order) do
         local key = "stone:" .. enchantID
         local stone = self:GetChoice(key)
         if stone then
             options[#options + 1] = { value = key,
-                label = string.format("%s (%d min)", stone.label, self:GetDuration(stone) / 60) }
+                label = self:GetLabel(stone) .. " (" .. string.format(ns.L.MINUTES or "%d min", self:GetDuration(stone) / 60) .. ")" }
         end
     end
     return options

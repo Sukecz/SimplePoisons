@@ -89,6 +89,9 @@ assert(state.hasEnchant and state.enchantID == 999999, "retain neutral non-poiso
 enchants[0] = {}
 assert(not ns.ApiCompat:GetWeaponState(16).hasEnchant,
     "an empty current result must not resurrect stale legacy poison data")
+enchants[0] = nil
+assert(not ns.ApiCompat:GetWeaponState(16).hasEnchant,
+    "an absent current result must not crash or resurrect a legacy enchant")
 C_Item.GetWeaponEnchantInfo = nil
 C_PaperDollInfo = nil
 Enum = nil
@@ -166,3 +169,17 @@ assert(not ns.ApiCompat:GetWeaponStoneKind(16) and requests == 1, "request cold 
 C_Item.GetItemInfo = function() return "Mace", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, 2, 5 end
 assert(ns.ApiCompat:GetWeaponStoneKind(16) == "weight", "modern item metadata fallback")
 print("Weapon classification: legacy/modern APIs, all stone weapon classes, shields, empty/cold metadata passed")
+
+
+local clock, attempts = 100, 0
+GetTime = function() return clock end
+C_Item = { RequestLoadItemDataByID = function() attempts = attempts + 1 end }
+ns.ApiCompat:RequestItemData(555555)
+for event = 1, 10 do ns.ApiCompat:RequestItemData(555555) end
+assert(attempts == 1, 'failed item data must not trigger an immediate request loop')
+clock = 131
+ns.ApiCompat:RequestItemData(555555)
+assert(attempts == 2, 'a later external event may retry the missing item')
+ns.ApiCompat:RequestItemData(666666)
+assert(attempts == 3, 'unrelated item requests must not be suppressed')
+print('Audit: nil enchant results, cached metadata and rate-limited per-item retries passed')

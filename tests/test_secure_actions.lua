@@ -5,6 +5,7 @@ local ns = {
     Buttons = {},
 }
 
+assert(loadfile("Bindings.lua"))("SimplePoisons", ns)
 assert(loadfile("SecureActions.lua"))("SimplePoisons", ns)
 assert(ns.SecureActions:BuildMacro(6947, 16) == "/use item:6947\n/use 16")
 assert(ns.SecureActions:BuildMacro(nil, 16) == nil)

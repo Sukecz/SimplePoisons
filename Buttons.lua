@@ -108,8 +108,9 @@ function Buttons:CreateButton(name, slotID, slotLabel)
         end
     end)
     button:SetScript("PostClick", function(self, mouseButton)
-        if not self.availableItems[mouseButton] then
-            local familyKey = ns.Database:GetClick(mouseButton)
+        local bind = ns.Bindings:Current(mouseButton)
+        if not self.availableItems[bind] then
+            local familyKey = self.boundChoices[bind]
             if familyKey then
                 ns.Core:Print(string.format(ns.L.NO_POISON, ns.ApplicationData:GetLabel(familyKey)))
             end
@@ -168,11 +169,15 @@ function Buttons:Create()
     self.moveHandle:SetScript("OnDragStart", function()
         if not ns.ApiCompat:IsCombatLocked() then
             Buttons.anchor:StartMoving()
+            Buttons.moving = true
         end
     end)
     self.moveHandle:SetScript("OnDragStop", function()
-        Buttons.anchor:StopMovingOrSizing()
-        ns.Database:SavePosition(Buttons.anchor)
+        if ns.ApiCompat:IsCombatLocked() then
+            Buttons.dragStopPending = true
+            return
+        end
+        Buttons:FinishMoving()
     end)
 
     self.lockButton = CreateFrame("Button", nil, self.moveControls, "UIPanelButtonTemplate")
@@ -268,7 +273,21 @@ function Buttons:ApplyPosition()
     self.anchor:SetPoint(position.point, UIParent, position.relativePoint, position.x, position.y)
 end
 
+function Buttons:FinishMoving()
+    if self.moving then
+        self.anchor:StopMovingOrSizing()
+        self.moving = false
+        ns.Database:SavePosition(self.anchor)
+    end
+    self.dragStopPending = false
+end
+
 function Buttons:OnCombatEnded()
+    if self.dragStopPending then self:FinishMoving() end
+    if self.lockPending then
+        self.lockPending = false
+        self:SetUnlocked(false)
+    end
     if self.textStylePending then
         self:ApplyTextStyle()
     elseif self.layoutPending then
@@ -288,6 +307,7 @@ function Buttons:SetUnlocked(unlocked)
     if self.unlocked then
         self.moveControls:Show()
     else
+        self:FinishMoving()
         self.moveControls:Hide()
         ns.Database:SavePosition(self.anchor)
     end
@@ -416,7 +436,7 @@ function Buttons:ShowTooltip(button)
     if state.hasEnchant then
         local stone = ns.SharpeningData:GetByEnchantID(state.enchantID)
         local activeName = button.familyKey and ns.PoisonData:GetLabel(button.familyKey)
-            or (stone and stone.label) or ns.L.UNKNOWN_ENCHANT
+            or (stone and ns.SharpeningData:GetLabel(stone)) or ns.L.UNKNOWN_ENCHANT
         GameTooltip:AddLine(string.format(ns.L.ACTIVE, activeName), 1, 1, 1)
         if not button.familyKey and not stone then
             GameTooltip:AddLine(ns.L.OTHER_ENCHANT, 0.8, 0.8, 0.8, true)
@@ -430,23 +450,23 @@ function Buttons:ShowTooltip(button)
         GameTooltip:AddLine(state.hasWeapon and ns.L.MISSING or ns.L.NO_WEAPON, 1, 0.2, 0.2)
     end
     GameTooltip:AddLine(" ")
-    local mappings = {
-        { "LeftButton", ns.L.LEFT_CLICK },
-        { "RightButton", ns.L.RIGHT_CLICK },
-        { "MiddleButton", ns.L.MIDDLE_CLICK },
-    }
-    for _, mapping in ipairs(mappings) do
-        local familyKey = ns.Database:GetClick(mapping[1])
-        -- Show the item actually bound to the secure click, including during combat.
-        local itemID = button.availableItems[mapping[1]]
-        local label
-        if itemID then
-            label = string.format(ns.L.RANK_STOCK, ns.ApplicationData:GetItemLabel(familyKey, itemID),
-                ns.ApiCompat:GetItemCount(itemID))
-        else
-            label = string.format(ns.L.NO_USABLE_RANK, ns.ApplicationData:GetLabel(familyKey))
+    for _, slot in ipairs(ns.Database:GetSlots()) do
+        local bind = slot.bind
+        local entry = ns.SecureActions.keyState and ns.SecureActions.keyState[bind]
+        local keyboard = ns.Bindings:IsKeyboard(bind)
+        if bind ~= "" and (not keyboard or (entry and entry.target == button.slotID)) then
+            local familyKey = keyboard and entry.choice or button.boundChoices[bind]
+            local itemID = keyboard and entry.itemID or button.availableItems[bind]
+            familyKey = familyKey or slot.choice
+            local label
+            if itemID then
+                label = string.format(ns.L.RANK_STOCK, ns.ApplicationData:GetItemLabel(familyKey, itemID),
+                    ns.ApiCompat:GetItemCount(itemID))
+            else
+                label = string.format(ns.L.NO_USABLE_RANK, ns.ApplicationData:GetLabel(familyKey))
+            end
+            GameTooltip:AddDoubleLine(ns.Bindings:GetLabel(bind), label, 1, 0.82, 0, 1, 1, 1)
         end
-        GameTooltip:AddDoubleLine(mapping[2], label, 1, 0.82, 0, 1, 1, 1)
     end
     if ns.SecureActions.refreshPending then
         GameTooltip:AddLine(ns.L.PENDING_REFRESH, 1, 0.82, 0, true)

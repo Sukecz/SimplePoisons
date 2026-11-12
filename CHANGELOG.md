@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0
+
+- Redesign settings with a wider two-column layout, eight visible assignment cards, page controls for larger lists, and an icon-based poison and stone picker with item tooltips.
+- Replace the fixed three-click configuration with up to 40 editable assignments. Preserve existing click choices when upgrading; new assignments start unbound.
+- Capture mouse buttons, keyboard shortcuts, mouse-wheel input, and Shift/Ctrl/Alt combinations directly in the binding dialog. Reject duplicate bindings and allow assignments to be cleared or removed.
+- Keep mouse clicks on the two weapon buttons as the primary controls. Add optional global keyboard shortcuts with the target hand selected only in their binding dialog. The same poison or stone can have both controls through separate assignments.
+- Add a native game AddOns settings entry, automatic window scaling for smaller screens, and a transparent header logo.
+- Add automatic UI localization for English, Brazilian Portuguese, German, French, Spanish (Spain and Latin America), Italian, Russian, Korean, Simplified Chinese, and Traditional Chinese, with an English fallback.
+- Improve localized tooltip matching using client-provided item and spell names, including enchant text that omits the item's Roman rank. Avoid matching poison names inside weapon proc descriptions.
+- Recover delayed equipment and enchant data after entering the world with a finite set of refreshes, fixing a startup path that could leave an equipped weapon showing NO WEAPON until reload.
+- Limit repeated item-data requests, safely finish interrupted move operations after combat, and stop minimap drag updates when the button is hidden.
+- Extend regression coverage for saved settings, dual mouse/keyboard controls, stale binding cleanup, combat deferral, localization, cold login, native options integration, and logo transparency.
+
+Assignments and layout changes remain locked during combat. Applying an item still requires a real mouse click or key press; Blizzard's replacement confirmations and item restrictions remain in effect. Forever support remains beta, and simulated tests do not replace live-client verification.
+
 ## 0.2.11
 
 - Move the Show MH/OH labels option below the other appearance toggles to prevent it from overlapping the button layout selector.

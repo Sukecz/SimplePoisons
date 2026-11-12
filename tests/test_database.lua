@@ -1,6 +1,7 @@
 local ns = {}
 
 assert(loadfile("Defaults.lua"))("SimplePoisons", ns)
+assert(loadfile("Bindings.lua"))("SimplePoisons", ns)
 ns.L = { NONE = "None" }
 ns.ApiCompat = { IsRogue = function() return true end, IsTBC = function() return false end }
 assert(loadfile("PoisonData.lua"))("SimplePoisons", ns)

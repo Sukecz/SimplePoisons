@@ -19,7 +19,8 @@ It keeps everything on two buttons:
 - a gray border and weapon icon indicate an unidentified or other temporary enchant;
 - active sharpening stones and weightstones show their own icon and remaining time
   with a gray border until the low-time warning turns it orange;
-- left, right, and middle click apply three configurable poison families or stones;
+- three editable slots initially use left, right, and middle click; add further slots
+  with `+ Add slot` and choose a binding and poison or stone for each;
 - show both weapon buttons, only the main hand, or only the off hand.
 - a small gear on the pair and an optional `SP` minimap button open settings;
   both can be hidden independently in settings. `/sp` always opens settings.
@@ -27,6 +28,45 @@ It keeps everything on two buttons:
   Leatrix Plus), SimplePoisons registers a standard launcher so minimap-button
   collectors receive the correct logo, click action and tooltip. Otherwise
   the addon creates its own button; no additional addon installation is needed.
+
+The settings window uses a wide two-column layout, eight visible assignment
+cards, and page controls for larger lists. No three-row assignment scrollbar
+is used. Click an effect to open an icon grid; hovering a card shows its item
+tooltip. Appearance and warning controls stay visible alongside assignments.
+The header logo has a transparent background, and the window scales down to
+fit smaller screens. Settings are available through `/sp`, the gear/minimap
+button and the game's Interface/AddOns list (or the modern AddOns settings list).
+
+Click **Set binding**, press a key or turn the mouse wheel, then click **Assign**.
+Use the dedicated capture area for ordinary left/right/middle/side clicks,
+including Shift/Ctrl/Alt combinations. Esc cancels; **Clear binding** removes
+the binding while retaining the effect. Duplicate assignments are rejected.
+New rows start unbound and do not change any existing assignments.
+
+Mouse-button bindings apply to the weapon button clicked. Keyboard, wheel and
+additional mouse-button bindings use the Main hand / Off hand selection in
+the binding dialog. The hand selector is only shown for these bindings; the
+assignment table has no Weapon column. To keep both controls for the same effect,
+add a second assignment with that effect and a keyboard shortcut; the existing
+mouse assignment remains intact. The keyboard shortcut works anywhere, without
+hovering either weapon button. Global bindings are temporary overrides while the addon is enabled;
+the original WoW binding is shown before assignment and is not rewritten with
+`SetBinding` or `SaveBindings`. All assignments can only be edited out of combat;
+protected action updates wait until combat ends. Up to 40 assignments are saved.
+Existing three-click choices and newer mouse-slot settings migrate unchanged,
+including repeated reloads. Unassigned modifier clicks do nothing rather than
+applying a plain-click poison.
+
+The UI selects the client language automatically: English, Brazilian Portuguese,
+German, French, Spanish (Spain and Latin America), Italian, Russian, Korean,
+Simplified Chinese and Traditional Chinese. Missing translations fall back to
+English. Item names come from the client, while application and primary enchant
+identification use numeric IDs. Tooltip fallback also uses localized item/spell
+names and tolerates an omitted Roman rank. Localization is covered by simulated
+API tests; behavior and translated layout have not been verified in non-English
+clients. Implementation references: [AceLocale](https://github.com/WoWUIDev/Ace3/blob/master/AceLocale-3.0/AceLocale-3.0.lua),
+[WeakAuras locales](https://github.com/WeakAuras/WeakAuras2/tree/main/WeakAuras/Locales),
+and [Blizzard secure templates](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.lua).
 
 The addon automatically selects the highest owned rank of the configured
 poison family that meets the Rogue's level requirement. While item data is

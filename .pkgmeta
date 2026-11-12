@@ -15,5 +15,6 @@ ignore:
   - tmp
   - assets/minimap-icon.png
   - assets/logo-wide.png
+  - assets/logo-header.png
   - assets/logo-1-1.png
   - "*.code-workspace"

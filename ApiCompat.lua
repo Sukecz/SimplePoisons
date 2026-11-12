@@ -81,16 +81,30 @@ function ApiCompat:GetItemIcon(itemID)
 end
 
 function ApiCompat:GetItemName(itemID)
-    if type(GetItemInfo) == "function" then
-        return GetItemInfo(itemID)
+    local name
+    if type(GetItemInfo) == "function" then name = GetItemInfo(itemID) end
+    if not name and C_Item and type(C_Item.GetItemNameByID) == "function" then
+        name = C_Item.GetItemNameByID(itemID)
     end
-    if C_Item and type(C_Item.GetItemNameByID) == "function" then
-        return C_Item.GetItemNameByID(itemID)
+    if not name and C_Item and type(C_Item.GetItemInfo) == "function" then
+        name = C_Item.GetItemInfo(itemID)
     end
-    return nil
+    return name
+end
+
+function ApiCompat:GetItemSpellName(itemID)
+    if C_Item and type(C_Item.GetItemSpell) == "function" then return C_Item.GetItemSpell(itemID) end
+    if type(GetItemSpell) == "function" then return GetItemSpell(itemID) end
 end
 
 function ApiCompat:RequestItemData(itemID)
+    -- Failed loads also emit item-data events. Bound retries per item to avoid
+    -- a request -> failure event -> request loop while metadata is unavailable.
+    local now = type(GetTime) == "function" and GetTime() or 0
+    self.itemRequestTimes = self.itemRequestTimes or {}
+    local previous = self.itemRequestTimes[itemID]
+    if previous and now - previous < 30 then return end
+    self.itemRequestTimes[itemID] = now
     if C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
         C_Item.RequestLoadItemDataByID(itemID)
         return
@@ -116,7 +130,7 @@ function ApiCompat:GetWeaponState(slotID)
             and Enum.WeaponSlot.MainHand or Enum.WeaponSlot.OffHand
         local enchants = C_Item.GetWeaponEnchantInfo(weaponSlot)
         local activeEnchant
-        for _, enchantInfo in pairs(enchants) do
+        for _, enchantInfo in pairs(enchants or {}) do
             if enchantInfo.hasEnchant
                 and (enchantInfo.enchantType == Enum.ItemEnchantType.Temporary
                     or enchantInfo.enchantType == Enum.ItemEnchantType.Imbue) then
@@ -188,13 +202,13 @@ function ApiCompat:GetWeaponStoneKind(slotID)
         classID, subclassID = select(6, GetItemInfoInstant(itemID))
     end
     if not classID then
-        self:RequestItemData(itemID)
         if C_Item and type(C_Item.GetItemInfo) == "function" then
             classID, subclassID = select(12, C_Item.GetItemInfo(itemID))
         elseif type(GetItemInfo) == "function" then
             classID, subclassID = select(12, GetItemInfo(itemID))
         end
     end
+    if not classID then self:RequestItemData(itemID) end
     if classID ~= 2 then return nil end
     if subclassID == 4 or subclassID == 5 or subclassID == 10 or subclassID == 13 then
         return "weight"
@@ -206,7 +220,10 @@ function ApiCompat:GetWeaponStoneKind(slotID)
 end
 
 local function normalized(text)
-    return type(text) == "string" and string.lower(text) or ""
+    if type(text) ~= "string" then return "" end
+    text = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    text = text:gsub("\194\160", " "):gsub("%s+", " ")
+    return (string.lower(text):gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
 function ApiCompat:DetectPoisonFamily(slotID, enchantID)
@@ -246,12 +263,19 @@ function ApiCompat:DetectPoisonFamily(slotID, enchantID)
     for _, key in ipairs(ns.PoisonData.order) do
         local itemIDs = ns.PoisonData:GetItemIDs(key)
         for index = #itemIDs, 1, -1 do
-            local name = self:GetItemName(itemIDs[index])
-            if name then
-                local needle = normalized(name)
-                for _, line in ipairs(lines) do
-                    if string.find(line, needle, 1, true) then
-                        return key
+            local itemID = itemIDs[index]
+            local itemName, spellName = self:GetItemName(itemID), self:GetItemSpellName(itemID)
+            -- Startup requests all poison data. Do not issue another explicit
+            -- request here: failed loads emit item-data events that rescan us.
+            for _, name in pairs({ item = itemName, spell = spellName }) do
+                -- Item names may include a Roman rank that the enchant tooltip omits.
+                local needle = normalized(name):gsub("%s+[ivx]+$", "")
+                if needle ~= "" then
+                    for _, line in ipairs(lines) do
+                        local first, last = string.find(line, needle, 1, true)
+                        local after = last and line:sub(last + 1, last + 1) or ""
+                        if first == 1
+                            and (after == "" or after:match("[%s%(:]") or line:sub(last + 1, last + 3) == "：") then return key end
                     end
                 end
             end
