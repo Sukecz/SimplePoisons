@@ -32,9 +32,9 @@ diff -u \
 grep -qx '## Interface: 11509' SimplePoisons.toc
 grep -qx '## Interface: 20506' SimplePoisons_TBC.toc
 grep -qx '## Interface: 16001' SimplePoisons_Camelot.toc
-grep -qx '## Version: 0.3.0' SimplePoisons.toc
-grep -qx '## Version: 0.3.0' SimplePoisons_TBC.toc
-grep -qx '## Version: 0.3.0' SimplePoisons_Camelot.toc
+grep -qx '## Version: 0.4.0' SimplePoisons.toc
+grep -qx '## Version: 0.4.0' SimplePoisons_TBC.toc
+grep -qx '## Version: 0.4.0' SimplePoisons_Camelot.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons_TBC.toc
 grep -qx '## X-Curse-Project-ID: 1660559' SimplePoisons_Camelot.toc
@@ -58,6 +58,10 @@ test -f assets/logo-wide.png
 file assets/logo-header.tga | grep -Fq '512 x 256 x 32'
 file assets/logo-wide-ui.tga | grep -Fq '512 x 288 x 24'
 test -f assets/logo-1-1.png
+file assets/poisons-goblin.ogg | grep -Fq 'Vorbis audio, mono'
+for level in {10..90..10} {110..300..10}; do
+    file "assets/reminder/$level.ogg" | grep -Fq 'Vorbis audio, mono'
+done
 test -f LICENSE
 test -f .github/workflows/ci.yml
 test -f .github/workflows/release.yml

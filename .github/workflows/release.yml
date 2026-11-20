@@ -7,8 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       release_ref:
-        description: Existing version tag to package and publish
+        description: Git reference to package and publish
         required: true
+        type: string
+      curseforge_tag:
+        description: New stable version tag for a CurseForge-only release (optional)
+        required: false
         type: string
 
 permissions:
@@ -36,7 +40,7 @@ jobs:
 
     env:
       CF_API_KEY: ${{ secrets.CF_API_TOKEN }}
-      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_OAUTH: ${{ !inputs.curseforge_tag && secrets.GITHUB_TOKEN || '' }}
 
     steps:
       - name: Checkout repository
@@ -52,6 +56,31 @@ jobs:
             exit 1
           fi
 
+      - name: Prepare a stable CurseForge tag
+        if: ${{ inputs.curseforge_tag }}
+        env:
+          RELEASE_TAG: ${{ inputs.curseforge_tag }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          grep -Fxq "## Version: ${RELEASE_TAG#v}" SimplePoisons.toc
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            tag -a "$RELEASE_TAG" -m "SimplePoisons $RELEASE_TAG"
+
       - name: Package and publish addon
         # Immutable audited patch for WoW Forever while upstream PR #202 is pending.
         uses: R41z0r/packager@7635232c5a62ae46908d9e82b8be0575d6d4d5d3
+
+      - name: Keep the CurseForge package for verification
+        if: ${{ inputs.curseforge_tag }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimplePoisons-${{ inputs.curseforge_tag }}
+          path: .release/SimplePoisons-${{ inputs.curseforge_tag }}.zip
+          include-hidden-files: true
+          if-no-files-found: error
+
+      - name: Record the published source tag
+        if: ${{ inputs.curseforge_tag }}
+        env:
+          RELEASE_TAG: ${{ inputs.curseforge_tag }}
+        run: git push origin "refs/tags/$RELEASE_TAG"

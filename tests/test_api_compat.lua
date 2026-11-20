@@ -92,6 +92,25 @@ assert(not ns.ApiCompat:GetWeaponState(16).hasEnchant,
 enchants[0] = nil
 assert(not ns.ApiCompat:GetWeaponState(16).hasEnchant,
     "an absent current result must not crash or resurrect a legacy enchant")
+
+assert(loadfile("SharpeningData.lua"))("SimplePoisons", ns)
+WOW_PROJECT_ID, WOW_PROJECT_CAMELOT = 18, 18
+local poison = { hasEnchant = true, enchantType = 3, timeLeft = 123000, charges = 42, enchantID = 625 }
+local stone = { hasEnchant = true, enchantType = 2, timeLeft = 45000, charges = 0, enchantID = 1643 }
+enchants[0], enchants[1] = { poison, stone }, { stone, poison }
+for _, slot in ipairs({ 16, 17 }) do
+    state = ns.ApiCompat:GetWeaponState(slot)
+    assert(state.weaponItemID == 12345 and state.enchantID == 625 and state.expirationMS == 123000)
+    assert(state.charges == 42 and state.secondaryStone.enchantID == 1643)
+    assert(state.secondaryStone.expirationMS == 45000 and state.secondaryStone.hasExpirationTime)
+end
+enchants[0], enchants[1] = { poison }, { stone }
+assert(not ns.ApiCompat:GetWeaponState(16).secondaryStone, "the second effect clears at stone expiry")
+state = ns.ApiCompat:GetWeaponState(17)
+assert(state.enchantID == 1643 and not state.secondaryStone, "a lone stone remains the main effect")
+WOW_PROJECT_ID = 2
+enchants[0] = { poison, stone }
+assert(not ns.ApiCompat:GetWeaponState(16).secondaryStone, "dual presentation is specific to Forever")
 C_Item.GetWeaponEnchantInfo = nil
 C_PaperDollInfo = nil
 Enum = nil

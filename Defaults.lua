@@ -20,6 +20,9 @@ ns.Defaults = {
     },
     lowMinutes = 3,
     lowCharges = 10,
+    soundAlerts = false,
+    reminderVolume = 100,
+    healthyPoisonOpacity = 100,
     scale = 1.0,
     textSize = 13,
     orientation = "HORIZONTAL",
@@ -39,6 +42,8 @@ ns.Defaults = {
 ns.Ranges = {
     lowMinutes = { min = 1, max = 30 },
     lowCharges = { min = 1, max = 60 },
+    reminderVolume = { min = 0, max = 300, step = 10 },
+    healthyPoisonOpacity = { min = 0, max = 100 },
     scale = { min = 0.6, max = 1.6 },
     textSize = { min = 9, max = 18 },
 }

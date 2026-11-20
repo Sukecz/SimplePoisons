@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+
+- Enable an optional spoken reminder when poison runs low on time or charges. Set its volume from 0% to 300% and use **Play** to hear the selected level.
+- Dim healthy poison buttons to any opacity from 0% to 100%. Hover to reveal a button or let it return to full visibility when an effect needs attention.
+- Track poison and a weapon stone together on the same weapon in WoW Forever. A blue bar shows the stone's remaining time and turns orange when the stone runs low. Hover for the exact time.
+- Assign a supported gamepad button through **Set binding** and choose which hand to apply the effect to.
+- Open **Test display** in `/sp` to preview six weapon states and try the reminder on any class.
+
+The reminder is off by default. Healthy poison buttons start at 100% opacity.
+
 ## 0.3.0
 
 - Redesign settings with a wider two-column layout, eight visible assignment cards, page controls for larger lists, and an icon-based poison and stone picker with item tooltips.

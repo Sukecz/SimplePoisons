@@ -2,6 +2,7 @@ local addonName, ns = ...
 
 local Options = { page = 1, PAGE_SIZE = 8 }
 ns.Options = Options
+local OPTIONS_WIDTH, OPTIONS_HEIGHT = 1120, 760
 
 local function panel(parent, name, width, height, x, y)
     local frame = CreateFrame("Frame", name, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -46,7 +47,7 @@ end
 
 local function apply()
     ns.SecureActions:RefreshAll()
-    ns.Buttons:Refresh()
+    ns.Buttons:Refresh(nil, true)
 end
 
 local function tooltip(frame, itemID, label)
@@ -97,7 +98,7 @@ end
 
 local function slider(parent, name, label, y, key, formatter, layout)
     local range = ns.Ranges[key]
-    local step = key == "scale" and 0.1 or 1
+    local step = range.step or (key == "scale" and 0.1 or 1)
     local frame = CreateFrame("Slider", name, parent, "OptionsSliderTemplate")
     frame:SetPoint("TOPLEFT", 25, y)
     frame:SetWidth(278)
@@ -123,7 +124,7 @@ local function slider(parent, name, label, y, key, formatter, layout)
         ns.Database:Set(key, value)
         update(value)
         if layout then ns.Buttons:ApplyTextStyle() end
-        ns.Buttons:Refresh()
+        ns.Buttons:Refresh(nil, true)
     end)
     frame:Refresh()
     return frame
@@ -149,12 +150,12 @@ function Options:ApplyScale()
     if not self.frame then return end
     local width = UIParent.GetWidth and UIParent:GetWidth() or 1280
     local height = UIParent.GetHeight and UIParent:GetHeight() or 900
-    self.frame:SetScale(math.min(1, (width - 32) / 1120, (height - 32) / 720))
+    self.frame:SetScale(math.min(1, (width - 32) / OPTIONS_WIDTH, (height - 32) / OPTIONS_HEIGHT))
 end
 
 function Options:Create()
     if self.frame then return self.frame end
-    local frame = panel(UIParent, "SimplePoisonsOptions", 1120, 720, 0, 0)
+    local frame = panel(UIParent, "SimplePoisonsOptions", OPTIONS_WIDTH, OPTIONS_HEIGHT, 0, 0)
     frame:ClearAllPoints()
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
@@ -196,7 +197,7 @@ function Options:Create()
     end)
     frame.pageText = text(assignments, "", 230, -510, 330, "GameFontHighlightSmall")
 
-    local appearance = panel(frame, nil, 338, 548, 764, -104)
+    local appearance = panel(frame, nil, 338, 591, 764, -104)
     text(appearance, ns.L.APPEARANCE, 18, -17, 300, "GameFontNormalLarge")
     frame.hands = dropdown(appearance, ns.L.VISIBLE_HANDS, -60, 150, {
         { value = "BOTH", label = ns.L.BOTH_HANDS }, { value = "MAIN", label = ns.L.MAIN_HAND_ONLY },
@@ -207,36 +208,50 @@ function Options:Create()
         { value = "HORIZONTAL", label = ns.L.HORIZONTAL }, { value = "VERTICAL", label = ns.L.VERTICAL },
     }, function() return ns.Database:Get("orientation") end,
     function(value) ns.Database:Set("orientation", value); ns.Buttons:ApplyLayout() end)
-    frame.scale = slider(appearance, "SimplePoisonsScale", ns.L.SCALE, -157, "scale",
+    frame.scale = slider(appearance, "SimplePoisonsScale", ns.L.SCALE, -150, "scale",
         function(value) return string.format("%.1fx", value) end, true)
-    frame.textSize = slider(appearance, "SimplePoisonsTextSize", ns.L.TEXT_SIZE, -213, "textSize",
+    frame.textSize = slider(appearance, "SimplePoisonsTextSize", ns.L.TEXT_SIZE, -202, "textSize",
         function(value) return tostring(math.floor(value)) end, true)
-    frame.showHandLabels = checkbox(appearance, ns.L.SHOW_HAND_LABELS, -249, "showHandLabels",
+    frame.healthyPoisonOpacity = slider(appearance, "SimplePoisonsHealthyPoisonOpacity",
+        ns.L.HEALTHY_POISON_OPACITY, -254, "healthyPoisonOpacity",
+        function(value) return string.format("%d%%", value) end)
+    frame.showHandLabels = checkbox(appearance, ns.L.SHOW_HAND_LABELS, -291, "showHandLabels",
         function() ns.Buttons:ApplyTextStyle() end)
-    frame.showMinimap = checkbox(appearance, ns.L.SHOW_MINIMAP, -280, "showMinimap",
+    frame.showMinimap = checkbox(appearance, ns.L.SHOW_MINIMAP, -319, "showMinimap",
         function() ns.MinimapButton:RefreshVisibility() end)
-    frame.showSettingsIcon = checkbox(appearance, ns.L.SHOW_SETTINGS_ICON, -311, "showSettingsIcon",
+    frame.showSettingsIcon = checkbox(appearance, ns.L.SHOW_SETTINGS_ICON, -347, "showSettingsIcon",
         function() ns.Buttons:ApplyLayout() end)
-    text(appearance, ns.L.WARNING_THRESHOLDS, 18, -361, 300, "GameFontNormal")
-    frame.lowTime = slider(appearance, "SimplePoisonsLowTime", ns.L.LOW_TIME, -410, "lowMinutes",
+    text(appearance, ns.L.WARNING_THRESHOLDS, 18, -381, 300, "GameFontNormal")
+    frame.lowTime = slider(appearance, "SimplePoisonsLowTime", ns.L.LOW_TIME, -425, "lowMinutes",
         function(value) return string.format(ns.L.MINUTES, math.floor(value)) end)
-    frame.lowCharges = slider(appearance, "SimplePoisonsLowCharges", ns.L.LOW_CHARGES, -473, "lowCharges",
+    frame.lowCharges = slider(appearance, "SimplePoisonsLowCharges", ns.L.LOW_CHARGES, -477, "lowCharges",
         function(value) return tostring(math.floor(value)) end)
+    frame.soundAlerts = checkbox(appearance, ns.L.SOUND_ALERTS, -515, "soundAlerts",
+        function() ns.Buttons:Refresh(nil, true) end)
+    frame.reminderVolume = slider(appearance, "SimplePoisonsReminderVolume", ns.L.REMINDER_VOLUME,
+        -557, "reminderVolume", function(value) return string.format("%d%%", value) end)
+    frame.reminderVolume:SetWidth(204)
+    frame.playReminder = button(appearance, ns.L.PLAY_SOUND, 78, 26, 235, -551,
+        function() ns.Buttons:PlayPoisonReminder() end)
 
-    frame.move = button(frame, ns.L.UNLOCK, 156, 26, 20, -674, function()
+    local footerY = -714
+    frame.move = button(frame, ns.L.UNLOCK, 156, 26, 20, footerY, function()
         if ns.Buttons:SetUnlocked(not ns.Buttons.unlocked) and ns.Buttons.unlocked then
             frame.keepButtonsUnlocked = true; frame:Hide()
         end
     end)
-    frame.resetPosition = button(frame, ns.L.RESET_POSITION, 156, 26, 185, -674, function()
+    frame.resetPosition = button(frame, ns.L.RESET_POSITION, 156, 26, 185, footerY, function()
         if not allowed() then return end
         ns.Database:ResetPosition(); ns.Buttons:ApplyPosition()
     end)
-    text(frame, ns.L.BINDING_HINT, 366, -671, 610, "GameFontHighlightSmall")
-    frame.close = button(frame, ns.L.CLOSE, 105, 26, 995, -674, function() frame:Hide() end)
+    text(frame, ns.L.BINDING_HINT, 366, footerY + 3, 470, "GameFontHighlightSmall")
+    frame.testDisplay = button(frame, ns.L.TEST_DISPLAY, 135, 26, 848, footerY,
+        function() self:OpenDisplayTest() end)
+    frame.close = button(frame, ns.L.CLOSE, 105, 26, 995, footerY, function() frame:Hide() end)
     frame:SetScript("OnHide", function()
         self:CancelCapture()
         if self.picker then self.picker:Hide() end
+        if self.displayTest then self.displayTest:Hide() end
         if frame.keepButtonsUnlocked then frame.keepButtonsUnlocked = nil; return end
         if ns.Buttons.unlocked then
             if ns.ApiCompat:IsCombatLocked() then ns.Buttons.lockPending = true
@@ -247,6 +262,70 @@ function Options:Create()
     if UISpecialFrames then table.insert(UISpecialFrames, "SimplePoisonsOptions") end
     frame:Hide()
     return frame
+end
+
+local displayTestCases = {
+    { label = "TEST_POISON_AND_STONE", poison = true, stone = true },
+    { label = "TEST_STONE_LOW", poison = true, stone = true, stoneLow = true },
+    { label = "TEST_POISON_LOW", poison = true, stone = true, poisonLow = true },
+    { label = "TEST_BOTH_LOW", poison = true, stone = true, poisonLow = true, stoneLow = true },
+    { label = "TEST_POISON_ONLY", poison = true },
+    { label = "TEST_STONE_ONLY", stone = true },
+}
+
+local function sampleEnchant(enchantID, time, charges)
+    return { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
+        expirationMS = time, enchantID = enchantID, charges = charges or 0 }
+end
+
+function Options:OpenDisplayTest()
+    if not allowed() then return end
+    self:CancelCapture()
+    if self.picker then self.picker:Hide() end
+    if not self.displayTest then
+        local frame = panel(self.frame, nil, 660, 372, 0, 0)
+        frame:ClearAllPoints()
+        frame:SetPoint("CENTER")
+        frame:SetFrameStrata("FULLSCREEN_DIALOG")
+        frame:EnableMouse(true)
+        text(frame, ns.L.TEST_DISPLAY, 22, -18, 450, "GameFontNormalLarge")
+        text(frame, ns.L.TEST_DISPLAY_HINT, 22, -49, 610, "GameFontHighlightSmall")
+        frame.samples = {}
+        for index, example in ipairs(displayTestCases) do
+            local x = 25 + ((index - 1) % 3) * 211
+            local y = -91 - math.floor((index - 1) / 3) * 115
+            local label = text(frame, ns.L[example.label], x, y, 190, "GameFontNormal")
+            label:SetJustifyH("CENTER")
+            local sample = ns.Buttons:CreatePreviewButton(frame)
+            sample:SetPoint("TOP", label, "BOTTOM", 0, -26)
+            sample.previewTitle = ns.L[example.label]
+            frame.samples[index] = sample
+        end
+        if type(PlaySoundFile) == "function" then
+            frame.sound = button(frame, ns.L.TEST_SOUND, 142, 26, 22, -326,
+                function() ns.Buttons:PlayPoisonReminder() end)
+        end
+        button(frame, ns.L.CLOSE, 100, 26, 538, -326, function() frame:Hide() end)
+        self.displayTest = frame
+    end
+
+    local limit = ns.Database:Get("lowMinutes") * 60000
+    local charges = math.max(28, ns.Database:Get("lowCharges"))
+    for index, example in ipairs(displayTestCases) do
+        local state
+        if example.stone then
+            local time = example.stoneLow and math.min(140000, limit - 1000) or math.max(1260000, limit)
+            state = sampleEnchant(1643, time)
+        end
+        if example.poison then
+            local time = example.poisonLow and math.min(49000, limit - 1000) or math.max(1080000, limit)
+            local poison = sampleEnchant(625, time, charges)
+            poison.secondaryStone = state
+            state = poison
+        end
+        ns.Buttons:RenderPreview(self.displayTest.samples[index], state, example.poison and "instant" or nil)
+    end
+    self.displayTest:Show()
 end
 
 function Options:SelectChoice(index, value)
@@ -319,6 +398,7 @@ end
 function Options:OpenPicker(index)
     if not allowed() then return end
     self:CancelCapture()
+    if self.displayTest then self.displayTest:Hide() end
     if not self.picker then
         local picker = panel(self.frame, nil, 760, 500, 180, -106)
         picker:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -373,6 +453,9 @@ end
 function Options:CancelCapture()
     self.captureIndex, self.candidate, self.captureTarget = nil, nil, nil
     if self.capture then
+        if self.capture.EnableGamePadButton then
+            self.capture:SetScript("OnGamePadButtonDown", nil)
+        end
         self.capture:EnableKeyboard(false)
         self.capture:EnableMouseWheel(false)
         self.capture:Hide()
@@ -399,15 +482,25 @@ function Options:SetCandidate(bind)
     self.capture.warning:SetText(conflict and conflict ~= "" and string.format(ns.L.BIND_CONFLICT, action) or ns.L.BIND_SAVE_HINT)
 end
 
+local function captureKey(_, key)
+    if key == "ESCAPE" then Options:CancelCapture(); return end
+    local bind = ns.Bindings:Capture(key)
+    if bind then Options:SetCandidate(bind) end
+end
+
 function Options:BeginCapture(index)
     if not allowed() then return end
     if self.picker then self.picker:Hide() end
+    if self.displayTest then self.displayTest:Hide() end
     if not self.capture then
         local capture = panel(self.frame, nil, 620, 300, 250, -195)
         capture:SetFrameStrata("FULLSCREEN_DIALOG")
         capture:EnableMouse(true)
         text(capture, ns.L.SET_BINDING, 22, -18, 575, "GameFontNormalLarge")
         text(capture, ns.L.CAPTURE_HINT, 22, -53, 575, "GameFontHighlightSmall")
+        if capture.EnableGamePadButton then
+            text(capture, ns.L.CAPTURE_GAMEPAD, 22, -86, 310, "GameFontHighlightSmall")
+        end
         capture.value = text(capture, ns.L.NONE, 30, -118, 300, "GameFontNormalLarge")
         capture.targetLabel = text(capture, ns.L.TARGET, 350, -92, 240, "GameFontNormalSmall")
         capture.target = button(capture, "", 240, 30, 350, -112, function()
@@ -422,11 +515,7 @@ function Options:BeginCapture(index)
             local bind = ns.Bindings:Capture(mouse, true)
             if bind then self:SetCandidate(bind) end
         end)
-        capture:SetScript("OnKeyDown", function(_, key)
-            if key == "ESCAPE" then self:CancelCapture(); return end
-            local bind = ns.Bindings:Capture(key)
-            if bind then self:SetCandidate(bind) end
-        end)
+        capture:SetScript("OnKeyDown", captureKey)
         capture:SetScript("OnMouseWheel", function(_, direction)
             self:SetCandidate(ns.Bindings:Capture(direction > 0 and "MOUSEWHEELUP" or "MOUSEWHEELDOWN"))
         end)
@@ -444,6 +533,9 @@ function Options:BeginCapture(index)
     self.captureIndex = index
     self.captureTarget = ns.Database:GetSlots()[index].target or 16
     self.capture:Show()
+    if self.capture.EnableGamePadButton then
+        self.capture:SetScript("OnGamePadButtonDown", captureKey)
+    end
     self.capture:EnableKeyboard(true)
     self.capture:EnableMouseWheel(true)
     if self.capture.SetPropagateKeyboardInput then self.capture:SetPropagateKeyboardInput(false) end
@@ -454,7 +546,10 @@ function Options:Refresh()
     if not self.frame then return end
     self:RefreshSlots()
     for _, key in ipairs({ "lowTime", "lowCharges", "hands", "orientation", "scale", "textSize",
-        "showMinimap", "showSettingsIcon", "showHandLabels" }) do self.frame[key]:Refresh() end
+        "showMinimap", "showSettingsIcon", "showHandLabels", "healthyPoisonOpacity", "soundAlerts",
+        "reminderVolume" }) do
+        self.frame[key]:Refresh()
+    end
     self.frame.move:SetText(ns.Buttons.unlocked and ns.L.LOCK or ns.L.UNLOCK)
 end
 

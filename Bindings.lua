@@ -61,7 +61,8 @@ function ns.Bindings:GetLabel(bind)
     if not bind or bind == "" then return ns.L.SET_BINDING end
     if self:IsKeyboard(bind) then
         local key = bind:sub(5)
-        return type(GetBindingText) == "function" and GetBindingText(key, "KEY_") or key
+        local label = type(GetBindingText) == "function" and GetBindingText(key, "KEY_")
+        return label and label ~= "" and label or key
     end
     return mouseLabel(self, bind)
 end

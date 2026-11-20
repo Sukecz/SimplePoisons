@@ -37,13 +37,14 @@ The header logo has a transparent background, and the window scales down to
 fit smaller screens. Settings are available through `/sp`, the gear/minimap
 button and the game's Interface/AddOns list (or the modern AddOns settings list).
 
-Click **Set binding**, press a key or turn the mouse wheel, then click **Assign**.
+Click **Set binding**, press a key or supported gamepad button, or turn the
+mouse wheel, then click **Assign**.
 Use the dedicated capture area for ordinary left/right/middle/side clicks,
 including Shift/Ctrl/Alt combinations. Esc cancels; **Clear binding** removes
 the binding while retaining the effect. Duplicate assignments are rejected.
 New rows start unbound and do not change any existing assignments.
 
-Mouse-button bindings apply to the weapon button clicked. Keyboard, wheel and
+Mouse-button bindings apply to the weapon button clicked. Keyboard, gamepad, wheel and
 additional mouse-button bindings use the Main hand / Off hand selection in
 the binding dialog. The hand selector is only shown for these bindings; the
 assignment table has no Weapon column. To keep both controls for the same effect,
@@ -76,8 +77,17 @@ death, does not remove click assignments. Each click's tooltip shows the exact
 bound rank and its own stock, including assignments waiting for a combat refresh.
 
 The default low warning appears below 3 minutes or below 10 charges. Both
-thresholds are adjustable in the settings window.
-Weapon stones use the same time threshold; the charge threshold applies only to poisons.
+thresholds are adjustable. Weapon stones use the time threshold.
+
+**Play poison reminder** gives one spoken reminder when a poison starts running low.
+It is off by default. **Reminder volume** ranges from 0% to 300%, and **Play**
+previews the selected level. **Healthy poison opacity** defaults to 100%. A dimmed
+button lights up when you hover over it or when a warning appears.
+
+In Forever, a stone active alongside a poison appears as a bar inside the poison
+icon. The bar shrinks with the remaining time and turns orange when the stone runs
+low. Hover for its name and exact time. **Test display** previews the different
+states and the sound on any class.
 
 Sharpening stones are detected on both weapons: Rough, Coarse, Heavy, Solid,
 Dense, Elemental, Consecrated, Blackfathom where present, and Fel/Adamantite in
@@ -127,14 +137,11 @@ inventory and character events refresh idle buttons.
 
 ## Status
 
-SimplePoisons 0.2.9 supports Classic Era, Hardcore, and Burning Crusade Classic
-2.5.6. TBC includes Instant Poison VII, Deadly Poison VI and VII, Wound Poison V,
-and Anesthetic Poison. The separate Forever 1.60.1 support remains beta pending
-live server testing and uses its modern temporary-enchant API. Every client
-keeps the same secure, hardware-click application workflow. Automated Lua, data,
-metadata, and packaging tests cover the project. Protected clicks, poison
-replacement confirmation behavior, and final geometry still require live
-verification in each client.
+SimplePoisons 0.4.0 supports Classic Era, Hardcore, Burning Crusade Classic
+2.5.6, and WoW Forever 1.60.1. Every client uses secure buttons for application
+through your click or key press. Automated tests cover the display, bindings,
+saved settings, and per-client APIs. In-game verification of the new gamepad
+bindings and simultaneous Forever enchants is pending.
 
 ## Local Windows deployment
 

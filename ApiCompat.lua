@@ -114,9 +114,20 @@ function ApiCompat:RequestItemData(itemID)
     end
 end
 
+local function setActiveEnchant(state, info)
+    state.hasEnchant = true
+    state.expirationMS = tonumber(info.timeLeft) or 0
+    state.hasExpirationTime = state.expirationMS > 0
+    state.charges = tonumber(info.charges) or 0
+    state.enchantID = tonumber(info.enchantID)
+    return state
+end
+
 function ApiCompat:GetWeaponState(slotID)
+    local itemID = type(GetInventoryItemID) == "function" and GetInventoryItemID("player", slotID)
     local state = {
-        hasWeapon = type(GetInventoryItemID) ~= "function" or GetInventoryItemID("player", slotID) ~= nil,
+        weaponItemID = itemID or nil,
+        hasWeapon = type(GetInventoryItemID) ~= "function" or itemID ~= nil,
         hasEnchant = false,
         expirationMS = 0,
         hasExpirationTime = false,
@@ -129,28 +140,25 @@ function ApiCompat:GetWeaponState(slotID)
         local weaponSlot = slotID == ns.Constants.MAIN_HAND_SLOT
             and Enum.WeaponSlot.MainHand or Enum.WeaponSlot.OffHand
         local enchants = C_Item.GetWeaponEnchantInfo(weaponSlot)
-        local activeEnchant
+        local fallback, poison, stone
+        local trackStone = self:IsForever()
         for _, enchantInfo in pairs(enchants or {}) do
             if enchantInfo.hasEnchant
                 and (enchantInfo.enchantType == Enum.ItemEnchantType.Temporary
                     or enchantInfo.enchantType == Enum.ItemEnchantType.Imbue) then
-                -- Prefer a poison when the weapon also has another imbue.
+                -- In Forever the temporary stone can coexist with the poison imbue.
                 if ns.PoisonData:GetFamilyByEnchantID(enchantInfo.enchantID) then
-                    activeEnchant = enchantInfo
-                    break
-                end
-                if not activeEnchant or enchantInfo.enchantType == Enum.ItemEnchantType.Temporary then
-                    activeEnchant = enchantInfo
+                    poison = poison or enchantInfo
+                elseif trackStone and ns.SharpeningData:GetByEnchantID(enchantInfo.enchantID) then
+                    stone = stone or enchantInfo
+                elseif not fallback or enchantInfo.enchantType == Enum.ItemEnchantType.Temporary then
+                    fallback = enchantInfo
                 end
             end
         end
-        if activeEnchant then
-            state.hasEnchant = true
-            state.expirationMS = tonumber(activeEnchant.timeLeft) or 0
-            state.hasExpirationTime = state.expirationMS > 0
-            state.charges = tonumber(activeEnchant.charges) or 0
-            state.enchantID = tonumber(activeEnchant.enchantID)
-        end
+        local activeEnchant = poison or stone or fallback
+        if activeEnchant then setActiveEnchant(state, activeEnchant) end
+        if poison and stone then state.secondaryStone = setActiveEnchant({}, stone) end
         return state
     end
 

@@ -10,7 +10,11 @@ local VALID_POINTS = {
 
 local function clamp(value, range, fallback)
     value = tonumber(value) or fallback
-    return math.max(range.min, math.min(range.max, value))
+    value = math.max(range.min, math.min(range.max, value))
+    if range.step then
+        value = math.floor(value / range.step + 0.5) * range.step
+    end
+    return value
 end
 
 local function validChoice(value, fallback)
@@ -33,6 +37,10 @@ function Database:Initialize(saved)
         },
         lowMinutes = clamp(saved.lowMinutes, ns.Ranges.lowMinutes, defaults.lowMinutes),
         lowCharges = clamp(saved.lowCharges, ns.Ranges.lowCharges, defaults.lowCharges),
+        soundAlerts = saved.soundAlerts == true,
+        reminderVolume = clamp(saved.reminderVolume, ns.Ranges.reminderVolume, defaults.reminderVolume),
+        healthyPoisonOpacity = clamp(saved.healthyPoisonOpacity, ns.Ranges.healthyPoisonOpacity,
+            defaults.healthyPoisonOpacity),
         scale = clamp(saved.scale, ns.Ranges.scale, defaults.scale),
         textSize = clamp(saved.textSize, ns.Ranges.textSize, defaults.textSize),
         orientation = saved.orientation == "VERTICAL" and "VERTICAL" or "HORIZONTAL",
@@ -80,19 +88,13 @@ function Database:Set(key, value)
     if not self.data then
         return false
     end
-    if key == "lowMinutes" then
-        value = clamp(value, ns.Ranges.lowMinutes, ns.Defaults.lowMinutes)
-    elseif key == "lowCharges" then
-        value = clamp(value, ns.Ranges.lowCharges, ns.Defaults.lowCharges)
-    elseif key == "scale" then
-        value = clamp(value, ns.Ranges.scale, ns.Defaults.scale)
-    elseif key == "textSize" then
-        value = clamp(value, ns.Ranges.textSize, ns.Defaults.textSize)
+    if ns.Ranges[key] then
+        value = clamp(value, ns.Ranges[key], ns.Defaults[key])
     elseif key == "orientation" then
         value = value == "VERTICAL" and "VERTICAL" or "HORIZONTAL"
     elseif key == "hands" then
         value = (value == "MAIN" or value == "OFF") and value or "BOTH"
-    elseif key == "showMinimap" or key == "showSettingsIcon" or key == "showHandLabels" then
+    elseif key == "showMinimap" or key == "showSettingsIcon" or key == "showHandLabels" or key == "soundAlerts" then
         value = value and true or false
     elseif key == "minimapAngle" then
         value = math.max(0, math.min(359, tonumber(value) or ns.Defaults.minimapAngle))

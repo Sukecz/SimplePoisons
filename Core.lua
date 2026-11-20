@@ -59,10 +59,12 @@ function Core:OnEvent(event, ...)
         ns.MinimapButton:RefreshVisibility()
         self:Print(ns.L.READY)
     elseif event == "PLAYER_ENTERING_WORLD" then
+        ns.Buttons:ResetPoisonReminder()
         ns.SecureActions:RefreshAll()
         ns.Buttons:Refresh(true)
         self:QueueEquipmentRefresh()
     elseif event == "PLAYER_LEAVING_WORLD" then
+        ns.Buttons:ResetPoisonReminder()
         self.equipmentGeneration = (self.equipmentGeneration or 0) + 1
     elseif event == "PLAYER_REGEN_DISABLED" then
         ns.Options:CancelCapture()
@@ -84,6 +86,7 @@ function Core:OnEvent(event, ...)
     elseif event == "PLAYER_EQUIPMENT_CHANGED"
         or event == "WEAPON_ENCHANT_CHANGED" or event == "WEAPON_SLOT_CHANGED"
         or (event == "UNIT_INVENTORY_CHANGED" and ... == "player") then
+        if event == "PLAYER_EQUIPMENT_CHANGED" then ns.Buttons:ResetPoisonReminder(...) end
         ns.SecureActions:RefreshAll()
         ns.Buttons:Refresh(true)
     end

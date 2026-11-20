@@ -16,6 +16,7 @@ end
 function methods:Enable() self.enabled = true end
 function methods:Disable() self.enabled = false end
 function methods:EnableKeyboard(value) self.keyboardEnabled = value end
+function methods:EnableGamePadButton() error("capture must register the handler without changing gamepad input flags") end
 function methods:EnableMouseWheel(value) self.wheelEnabled = value end
 function methods:SetPropagateKeyboardInput(value) self.propagate = value end
 function methods:SetVerticalScroll(value) self.scroll = value end
@@ -25,6 +26,7 @@ function methods:SetScript(event, callback) self.scripts[event] = callback end
 function methods:RegisterEvent(event) self.events = self.events or {}; self.events[event] = true end
 function methods:UnregisterEvent(event) self.events[event] = nil end
 function methods:SetPoint(...) protectedChange(self); self.point = { ... } end
+function methods:SetAllPoints(relative) protectedChange(self); self.relative = relative end
 function methods:GetPoint() return "CENTER", UIParent, "CENTER", 0, 0 end
 function methods:ClearAllPoints() protectedChange(self) end
 function methods:SetSize(width, height) protectedChange(self); self.width, self.height = width, height end
@@ -73,8 +75,11 @@ for _, name in ipairs({
 
 function methods:SetWidth(value) self.width = value end
 function methods:SetHeight(value) self.height = value end
-function methods:SetAlpha(value) self.alpha = value end
+function methods:SetAlpha(value) protectedChange(self); self.alpha = value end
+function methods:SetColorTexture(...) self.color = { ... } end
 function methods:SetFrameStrata(value) self.strata = value end
+function methods:SetFrameLevel(value) self.frameLevel = value end
+function methods:GetFrameLevel() return self.frameLevel or 1 end
 function methods:SetBackdrop(value) self.backdrop = value end
 function methods:SetBackdropColor(...) self.background = { ... } end
 function methods:SetTextColor(...) self.color = { ... } end
@@ -278,12 +283,13 @@ assert(main.availableItems.LeftButton == 8928, "combat preserves the exact bound
 
 local tooltipLines = {}
 GameTooltip = {
-    SetOwner = function() tooltipLines = {} end,
+    SetOwner = function(self, owner) self.owner = owner; tooltipLines = {} end,
+    IsOwned = function(self, owner) return self.owner == owner end,
     SetText = function() end,
     AddLine = function(_, text) tooltipLines[#tooltipLines + 1] = text end,
     AddDoubleLine = function(_, _, text) tooltipLines[#tooltipLines + 1] = text end,
     Show = function() end,
-    Hide = function() end,
+    Hide = function(self) self.owner = nil end,
 }
 ns.Buttons:ShowTooltip(main)
 local tooltip = table.concat(tooltipLines, "\n")
@@ -332,7 +338,7 @@ states[16] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
 ns.Core:OnEvent("UNIT_INVENTORY_CHANGED", "player")
 assert(anchor.scripts.OnUpdate)
 assert(main.familyKey == "instant" and main.icon.texture == "poison:8928")
-assert(main.border[2] == 0.72 and not main.warningGlow.shown)
+assert(main.visual.border[2] == 0.72 and not main.warningGlow.shown)
 reads = 0
 anchor.scripts.OnUpdate(anchor, 0.1)
 assert(reads == 0)
@@ -350,7 +356,7 @@ states[16] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
     expirationMS = 5000, charges = 0, enchantID = 999999 }
 ns.Core:OnEvent("UNIT_INVENTORY_CHANGED", "player")
 assert(main.familyKey == nil and main.icon.texture == "weapon:16")
-assert(main.border[1] == 0.55 and not main.warningGlow.shown)
+assert(main.visual.border[1] == 0.55 and not main.warningGlow.shown)
 assert(not main.missingText.shown)
 ns.Buttons:ShowTooltip(main)
 assert(table.concat(tooltipLines, "\n"):find(ns.L.OTHER_ENCHANT, 1, true))
@@ -386,7 +392,7 @@ assert(not tooltip:find(ns.L.UNKNOWN_ENCHANT, 1, true))
 assert(not tooltip:find(ns.L.OTHER_ENCHANT, 1, true))
 states[16].expirationMS = 5000
 anchor.scripts.OnUpdate(anchor, 0.2)
-assert(main.timeText.text == "5s" and main.warningGlow.shown and main.border[2] == 0.32)
+assert(main.timeText.text == "5s" and main.warningGlow.shown and main.visual.border[2] == 0.32)
 states[16] = { hasWeapon = true, hasEnchant = false, expirationMS = 0, charges = 0 }
 anchor.scripts.OnUpdate(anchor, 0.2)
 assert(main.missingText.shown and main.icon.texture == "weapon:16")
@@ -577,7 +583,7 @@ for _, project in ipairs({ 2, 5, 18 }) do
             ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
             for _, button in ipairs({ main, ns.Buttons.offButton }) do
                 assert(button.icon.texture == "poison:" .. row[2])
-                assert(button.timeText.text == "3m" and button.border[1] == 0.55)
+                assert(button.timeText.text == "3m" and button.visual.border[1] == 0.55)
                 assert(not button.warningGlow.shown and not button.missingText.shown)
                 ns.Buttons:ShowTooltip(button)
                 assert(table.concat(tooltipLines, "\n"):find(
@@ -590,7 +596,7 @@ for _, project in ipairs({ 2, 5, 18 }) do
             end
             anchor.scripts.OnUpdate(anchor, 0.2)
             for _, button in ipairs({ main, ns.Buttons.offButton }) do
-                assert(button.warningGlow.shown and button.border[2] == 0.32,
+                assert(button.warningGlow.shown and button.visual.border[2] == 0.32,
                     "every known stone warns below the time threshold, including during combat")
                 assert(button.chargeText.text == "")
             end
@@ -813,7 +819,7 @@ do
     ns.Options:RegisterCategory()
     assert(registrations == 1 and ns.Options.category == modern)
     Settings = nil
-    assert(settings.width == 1120 and settings.height == 720 and not settings.slotScroll)
+    assert(settings.width == 1120 and settings.height == 760 and not settings.slotScroll)
     ns.Database:Reset()
     for index = 1, 6 do ns.Database:AddSlot() end
     ns.Options.page = 1
@@ -876,6 +882,201 @@ do
     settings:Hide()
     assert(not capture.keyboardEnabled)
     print('Redesign: native options old/new APIs, 8 visible rows, paging, icon picker, key/click/wheel capture, duplicates, target and capture cleanup passed')
+end
+
+do
+    local off = ns.Buttons.offButton
+    local plays = 0
+    PlaySoundFile = function(path, channel)
+        assert(path == "Interface\\AddOns\\SimplePoisons\\assets\\poisons-goblin.ogg" and channel == "SFX")
+        plays = plays + 1
+    end
+
+    WOW_PROJECT_ID = WOW_PROJECT_CAMELOT
+    Enum = { WeaponSlot = { MainHand = 0, OffHand = 1 },
+        ItemEnchantType = { Permanent = 1, Temporary = 2, Imbue = 3 } }
+    local function poison(time, charges)
+        return { hasEnchant = true, enchantType = 3, timeLeft = time, charges = charges, enchantID = 625 }
+    end
+    local stone = { hasEnchant = true, enchantType = 2, timeLeft = 1260000, enchantID = 1643 }
+    local enchants = { [0] = { poison(1080000, 28), stone }, [1] = { poison(1080000, 28) } }
+    C_Item = { GetWeaponEnchantInfo = function(slot) return enchants[slot] end }
+    GetInventoryItemID = function(_, slot) return slot == 16 and 100 or 101 end
+
+    ns.Database:Reset()
+    ns.Buttons:ApplyLayout()
+    ns.Buttons:Refresh()
+    ns.Options:Open()
+    assert(not settings.soundAlerts:GetChecked() and settings.healthyPoisonOpacity.value == 100)
+    assert(main.stoneBar.shown and main.stoneTrack.height == 8 and main.stoneBar.height == 8)
+    assert(main.stoneTrack.point[1] == "BOTTOM" and main.stoneTrack.point[2] == main.icon
+        and main.stoneTrack.point[3] == "BOTTOM" and main.stoneTrack.point[4] == 0,
+        "the stone track is centered on the icon")
+    assert(main.timeText.text == "18m" and main.chargeText.text == "28" and not off.stoneBar.shown)
+    assert(math.abs(main.stoneBar.width - 38 * 0.7) < 0.001 and main.stoneBar.color[3] == 1)
+
+    settings.healthyPoisonOpacity:SetValue(0)
+    assert(main.visual.alpha == 0 and off.visual.alpha == 0 and main:IsShown() and off:IsShown())
+    ns.SlashCommands:Handle("move")
+    assert(main.visual.alpha == 1 and off.visual.alpha == 1)
+    ns.SlashCommands:Handle("lock")
+    assert(main.visual.alpha == 0 and off.visual.alpha == 0)
+    main.scripts.OnEnter(main)
+    assert(main.visual.alpha == 1 and off.visual.alpha == 0)
+    assert(table.concat(tooltipLines, "\n"):find("Dense Sharpening Stone", 1, true))
+    assert(table.concat(tooltipLines, "\n"):find("Time left: 21:00", 1, true))
+    combat = true
+    stone.timeLeft = 140000
+    anchor.scripts.OnUpdate(anchor, 0.2)
+    assert(table.concat(tooltipLines, "\n"):find("Time left: 2:20", 1, true))
+    main.scripts.OnLeave(main)
+    assert(main.visual.alpha == 1 and off.visual.alpha == 0, "low stone reveals only its own hand")
+    assert(main.stoneBar.color[1] == 1 and main.stoneBar.width < 4 and not main.warningGlow.shown)
+    assert(plays == 0, "stone warnings are silent")
+
+    stone.timeLeft = 1260000
+    enchants[0][1] = poison(120000, 24)
+    anchor.scripts.OnUpdate(anchor, 0.2)
+    assert(main.warningGlow.shown and main.stoneBar.color[3] == 1 and plays == 0)
+    stone.timeLeft = 140000
+    anchor.scripts.OnUpdate(anchor, 0.2)
+    assert(main.warningGlow.shown and main.stoneBar.color[1] == 1 and plays == 0)
+    combat = false
+    settings.soundAlerts:SetChecked(true)
+    settings.soundAlerts.scripts.OnClick(settings.soundAlerts)
+    assert(plays == 0, "enabling the setting while already low is silent")
+    enchants[0][1] = poison(1080000, 28)
+    ns.Buttons:Refresh()
+    settings.lowCharges:SetValue(30)
+    assert(plays == 0 and main.warningGlow.shown, "moving the threshold is silent")
+    settings.lowCharges:SetValue(10)
+
+    enchants[0][1], enchants[1][1] = poison(179999, 28), poison(1080000, 9)
+    combat = true
+    anchor.scripts.OnUpdate(anchor, 0.2)
+    assert(plays == 1 and main.visual.alpha == 1 and off.visual.alpha == 1)
+    anchor.scripts.OnUpdate(anchor, 0.2)
+    assert(plays == 1, "one sound for simultaneous warnings, without repeats")
+    combat = false
+    enchants[0] = { stone }
+    ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
+    assert(main.icon.texture == "poison:12404" and main.timeText.text == "3m" and not main.stoneBar.shown)
+    enchants[0] = { poison(1080000, 28), stone }
+    ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
+    enchants[0][1] = poison(120000, 28)
+    ns.Core:OnEvent("PLAYER_EQUIPMENT_CHANGED", 16, true)
+    assert(plays == 1, "equipping another weapon with the same item ID does not sound")
+    enchants[0] = { poison(0, 28), stone }
+    enchants[1] = {}
+    ns.Buttons:Refresh()
+    assert(anchor.scripts.OnUpdate, "a timed stone keeps updates running under a poison without a timer")
+    enchants[0][2] = nil
+    anchor.scripts.OnUpdate(anchor, 0.2)
+    assert(not anchor.scripts.OnUpdate and not main.stoneBar.shown and main.visual.alpha == 0)
+    enchants[0] = {}
+    ns.Core:OnEvent("WEAPON_ENCHANT_CHANGED")
+    assert(main.missingText.shown and main.visual.alpha == 1 and plays == 1, "missing poison shows at full opacity")
+    print("Poison reminders, 0% hover/move recovery, independent stone timers and combat-safe graphics passed")
+end
+
+do
+    local overrides = {}
+    ClearOverrideBindings = function()
+        assert(not combat)
+        overrides = {}
+    end
+    SetOverrideBindingClick = function(_, priority, key, button, mouse)
+        assert(not combat and priority and mouse == "LeftButton")
+        overrides[key] = button
+    end
+    GetBindingAction = function(key) return key == "PAD1" and "JUMP" or "" end
+    GetBindingText = function() return "" end
+    BINDING_NAME_JUMP = "Jump"
+    ns.Database:Initialize({})
+    assert(ns.Database:AddSlot())
+    ns.Options:BeginCapture(4)
+    local capture = ns.Options.capture
+    capture.scripts.OnGamePadButtonDown(capture, "PAD1")
+    assert(ns.Options.candidate == "key:PAD1" and capture.value.text == "PAD1")
+    assert(capture.target:IsShown() and capture.warning.text:find("Jump", 1, true))
+    capture.target.scripts.OnClick()
+    capture.save.scripts.OnClick()
+    assert(not capture.scripts.OnGamePadButtonDown)
+    assert(ns.Database:GetSlots()[4].target == 17 and ns.Database:GetSlots()[1].bind == "LeftButton")
+    ns.Database:Initialize(SimplePoisonsDB)
+    ns.SecureActions:RefreshAll()
+    assert(_G[overrides.PAD1].attributes.macrotext == "/use item:8928\n/use 17")
+    ns.Options:BeginCapture(4)
+    combat = true
+    ns.Core:OnEvent("PLAYER_REGEN_DISABLED")
+    assert(not capture.scripts.OnGamePadButtonDown and not capture:IsShown())
+    assert(overrides.PAD1, "combat cleanup preserves saved bindings")
+    combat = false
+    assert(ns.Database:RemoveSlot(4))
+    ns.SecureActions:RefreshAll()
+    assert(not overrides.PAD1 and main.attributes.macrotext1 == "/use item:8928\n/use 16")
+    print("Gamepad capture, conflicts, hand targeting, combat cleanup and safe override removal passed")
+end
+
+do
+    WOW_PROJECT_ID = 2
+    ns.ApiCompat.IsRogue = function() return false end
+    ns.Database:Set("healthyPoisonOpacity", 0)
+    ns.Database:Set("lowMinutes", 30)
+    ns.Database:Set("lowCharges", 60)
+    ns.Options:Open()
+    local previousReads, liveState, saved = reads, main.state, SimplePoisonsDB
+    local liveMacro = main.attributes.macrotext1
+    local played = {}
+    PlaySoundFile = function(path, channel)
+        assert(channel == "SFX")
+        played[#played + 1] = path
+    end
+    settings.testDisplay.scripts.OnClick()
+    local preview = ns.Options.displayTest
+    local both, lowStone, lowPoison, lowBoth, poisonOnly, stoneOnly = unpack(preview.samples)
+    assert(preview:IsShown() and #preview.samples == 6)
+    for _, sample in ipairs(preview.samples) do
+        assert(not sample.protected and not sample.attributes and not sample.scripts.OnUpdate)
+        assert(sample.visual.alpha == 1, "samples remain visible at 0% gameplay opacity")
+    end
+    assert(both.stoneBar.shown and both.stoneBar.color[3] == 1 and not both.warningGlow.shown)
+    assert(lowStone.stoneBar.color[1] == 1 and not lowStone.warningGlow.shown)
+    assert(lowPoison.stoneBar.color[3] == 1 and lowPoison.warningGlow.shown)
+    assert(lowBoth.stoneBar.color[1] == 1 and lowBoth.warningGlow.shown)
+    assert(poisonOnly.familyKey == "instant" and not poisonOnly.stoneBar.shown)
+    assert(stoneOnly.icon.texture == "poison:12404" and not stoneOnly.stoneBar.shown)
+
+    lowStone.scripts.OnEnter(lowStone)
+    local details = table.concat(tooltipLines, "\n")
+    assert(details:find("Instant Poison", 1, true) and details:find("Dense Sharpening Stone", 1, true))
+    assert(details:find("Time left: 2:20", 1, true) and not details:find("in bags", 1, true))
+    lowStone.scripts.OnLeave(lowStone)
+    assert(#played == 0 and not ns.Database:Get("soundAlerts"))
+    preview.sound.scripts.OnClick()
+    assert(#played == 1 and played[1]:find("poisons-goblin.ogg", 1, true))
+    assert(reads == previousReads and main.state == liveState and main.attributes.macrotext1 == liveMacro)
+    assert(SimplePoisonsDB == saved and saved.healthyPoisonOpacity == 0)
+    settings:Hide()
+    assert(not preview:IsShown())
+    ns.Options:Open()
+    settings.reminderVolume:SetValue(67)
+    assert(ns.Database:Get("reminderVolume") == 70 and #played == 1, "sliding is quiet")
+    settings.playReminder.scripts.OnClick()
+    assert(#played == 2 and played[2]:find("reminder\\70.ogg", 1, true))
+    settings.testDisplay.scripts.OnClick()
+    preview.sound.scripts.OnClick()
+    assert(#played == 3 and played[3] == played[2] and not ns.Database:Get("soundAlerts"))
+    settings:Hide()
+    ns.Options:Open()
+    settings.reminderVolume:SetValue(300)
+    settings.playReminder.scripts.OnClick()
+    assert(ns.Database:Get("reminderVolume") == 300 and played[4]:find("reminder\\300.ogg", 1, true))
+    settings.reminderVolume:SetValue(0)
+    settings.playReminder.scripts.OnClick()
+    assert(ns.Database:Get("reminderVolume") == 0 and #played == 4, "0% mutes manual and automatic playback")
+    settings:Hide()
+    print("Display test: all six samples on a non-Rogue, shared warnings, tooltips and playback without touching live weapons")
 end
 
 if SIMPLEPOISONS_PREVIEW then SIMPLEPOISONS_PREVIEW(ns) end
