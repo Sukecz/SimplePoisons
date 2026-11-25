@@ -244,6 +244,32 @@ ns.Core:OnEvent("ITEM_DATA_LOAD_RESULT", 8928, true)
 assert(ns.Core.frame.events.ITEM_DATA_LOAD_RESULT)
 assert(main.availableItems.LeftButton == 8928)
 
+-- A full auction scan must not schedule UI work for unrelated item loads.
+do
+    local callbacks = {}
+    C_Timer = { After = function(_, callback) callbacks[#callbacks + 1] = callback end }
+    local onEvent = ns.Core.frame.scripts.OnEvent
+    local before, availableItems = reads, main.availableItems
+    for itemID = 100000, 109999 do
+        onEvent(ns.Core.frame, "GET_ITEM_INFO_RECEIVED", itemID, true)
+        onEvent(ns.Core.frame, "ITEM_DATA_LOAD_RESULT", itemID, true)
+    end
+    onEvent(ns.Core.frame, "ITEM_DATA_LOAD_RESULT", 8928, false)
+    onEvent(ns.Core.frame, "GET_ITEM_INFO_RECEIVED", 100, false)
+    assert(#callbacks == 0 and reads == before and main.availableItems == availableItems,
+        "unrelated and failed loads must leave weapon reads and secure bindings alone")
+
+    onEvent(ns.Core.frame, "GET_ITEM_INFO_RECEIVED", 8928, true)
+    onEvent(ns.Core.frame, "ITEM_DATA_LOAD_RESULT", 8928, true)
+    onEvent(ns.Core.frame, "ITEM_DATA_LOAD_RESULT", 12404, true)
+    assert(#callbacks == 1 and reads == before, "a burst of relevant loads shares one delayed refresh")
+    callbacks[1]()
+    assert(reads == before + 2 and main.availableItems ~= availableItems,
+        "the refresh updates both hands and secure bindings")
+    C_Timer = nil
+end
+print("Item data events: 20,000 unrelated loads ignored and relevant events batched")
+
 -- A completed poison application can emit only the dedicated enchant event.
 -- It must wake an idle monitor, including in combat, without changing clicks.
 states[16] = { hasWeapon = true, hasEnchant = true, hasExpirationTime = true,
@@ -424,6 +450,7 @@ local clients = {
 for _, client in ipairs(clients) do
     WOW_PROJECT_ID = client.project
     C_Item.GetItemInfo = client.modern and GetItemInfo or nil
+    ns.ApplicationData:RequestItemData()
     for _, option in ipairs(ns.PoisonData:GetOptions()) do
         local ids = ns.PoisonData:GetItemIDs(option.value)
         local id = ids[#ids]
@@ -442,7 +469,9 @@ for _, client in ipairs(clients) do
                 end
             end
             itemDataLoaded = true
+            local before = reads
             ns.Core:OnEvent(event, id, true)
+            assert(reads == before + 2, client.name .. " " .. option.value .. " must refresh for " .. event)
         end
     end
 end
@@ -541,6 +570,7 @@ GetItemInfoInstant = function(id) return id, nil, nil, nil, nil, 2, weaponSubcla
 counts[12643] = 4
 for _, project in ipairs({ 2, 5, 18 }) do
     WOW_PROJECT_ID = project
+    ns.ApplicationData:RequestItemData()
     ns.Core:OnEvent("PLAYER_EQUIPMENT_CHANGED", 17)
     assert(main.attributes.macrotext1 == "/use item:12404\n/use 16")
     assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:12643\n/use 17")
@@ -563,8 +593,21 @@ weapons[17] = 102
 ns.Core:OnEvent("PLAYER_EQUIPMENT_CHANGED", 17)
 assert(not ns.Buttons.offButton.attributes.macrotext1, "unknown weapon waits for metadata")
 weaponSubclasses[102] = 4
+ns.Core:OnEvent("ITEM_DATA_LOAD_RESULT", 100, true)
+assert(not ns.Buttons.offButton.attributes.macrotext1, "old weapon data must not refresh the new weapon")
 ns.Core:OnEvent("ITEM_DATA_LOAD_RESULT", 102, true)
 assert(ns.Buttons.offButton.attributes.macrotext1 == "/use item:12643\n/use 17")
+
+counts[287980], counts[18262] = 1, 1
+itemLevels[287980] = playerLevel + 1
+itemDataLoaded = false
+selectOption(settings.leftClick, "stone:2506")
+assert(main.attributes.macrotext1 == "/use item:287980\n/use 16")
+itemDataLoaded = true
+ns.Core:OnEvent("GET_ITEM_INFO_RECEIVED", 287980, true)
+assert(main.attributes.macrotext1 == "/use item:18262\n/use 16",
+    "Forever's alternate elemental stone must refresh when its required level loads")
+counts[287980], counts[18262], itemLevels[287980] = nil, nil, nil
 selectOption(settings.leftClick, "weight:auto")
 assert(main.attributes.macrotext1 == "/use item:12643\n/use 16")
 print("Mixed weapons: per-hand Auto, all clients, equipment swaps, combat, empty/cold hand and dropdown passed")

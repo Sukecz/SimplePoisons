@@ -137,7 +137,7 @@ inventory and character events refresh idle buttons.
 
 ## Status
 
-SimplePoisons 0.4.0 supports Classic Era, Hardcore, Burning Crusade Classic
+SimplePoisons 0.4.1 supports Classic Era, Hardcore, Burning Crusade Classic
 2.5.6, and WoW Forever 1.60.1. Every client uses secure buttons for application
 through your click or key press. Automated tests cover the display, bindings,
 saved settings, and per-client APIs. In-game verification of the new gamepad

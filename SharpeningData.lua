@@ -119,12 +119,12 @@ function SharpeningData:GetOptions()
     return options
 end
 
-function SharpeningData:RequestItemData()
-    for _, option in ipairs(self:GetOptions()) do
-        local stone = self:GetChoice(option.value)
+function SharpeningData:ForEachItemID(visit)
+    for _, enchantID in ipairs(self.order) do
+        local stone = self:GetChoice("stone:" .. enchantID)
         if stone then
             for _, itemID in ipairs(self:GetItemIDs(stone)) do
-                ns.ApiCompat:RequestItemData(itemID)
+                visit(itemID)
             end
         end
     end

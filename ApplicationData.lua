@@ -4,6 +4,23 @@ local addonName, ns = ...
 local ApplicationData = {}
 ns.ApplicationData = ApplicationData
 
+local supportedItemIDs = {}
+
+local function requestItem(itemID)
+    supportedItemIDs[itemID] = true
+    ns.ApiCompat:RequestItemData(itemID)
+end
+
+function ApplicationData:RequestItemData()
+    supportedItemIDs = {}
+    ns.PoisonData:ForEachItemID(requestItem)
+    ns.SharpeningData:ForEachItemID(requestItem)
+end
+
+function ApplicationData:IsSupportedItem(itemID)
+    return supportedItemIDs[itemID] == true
+end
+
 function ApplicationData:IsAvailableChoice(key)
     return (ns.ApiCompat:IsRogue() and ns.PoisonData:IsAvailableFamily(key))
         or ns.SharpeningData:IsAvailableChoice(key)

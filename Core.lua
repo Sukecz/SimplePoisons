@@ -14,8 +14,7 @@ end
 
 function Core:Initialize()
     ns.Database:Initialize(SimplePoisonsDB)
-    ns.PoisonData:RequestItemData()
-    ns.SharpeningData:RequestItemData()
+    ns.ApplicationData:RequestItemData()
     ns.Buttons:Create()
     ns.MinimapButton:Create()
     ns.SecureActions:RefreshAll()
@@ -42,6 +41,27 @@ function Core:QueueEquipmentRefresh()
         end)
     end
     schedule(1)
+end
+
+function Core:OnItemDataLoaded(itemID, success)
+    if not success or not itemID or self.itemRefreshQueued then return end
+    -- Item events are global. Auto stones also need the equipped weapon's data.
+    if not ns.ApplicationData:IsSupportedItem(itemID) and not ns.ApiCompat:IsEquippedWeapon(itemID) then
+        return
+    end
+
+    self.itemRefreshQueued = true
+    local function refresh()
+        self.itemRefreshQueued = false
+        ns.SecureActions:RefreshAll()
+        ns.Buttons:Refresh(true)
+    end
+    -- Both client events can report the same load in the same frame.
+    if C_Timer and type(C_Timer.After) == "function" then
+        C_Timer.After(0, refresh)
+    else
+        refresh()
+    end
 end
 
 function Core:OnEvent(event, ...)
@@ -76,8 +96,9 @@ function Core:OnEvent(event, ...)
         if ns.Options.frame and ns.Options.frame:IsShown() then
             ns.Options:Refresh()
         end
-    elseif event == "BAG_UPDATE_DELAYED" or event == "GET_ITEM_INFO_RECEIVED"
-        or event == "ITEM_DATA_LOAD_RESULT"
+    elseif event == "GET_ITEM_INFO_RECEIVED" or event == "ITEM_DATA_LOAD_RESULT" then
+        self:OnItemDataLoaded(...)
+    elseif event == "BAG_UPDATE_DELAYED"
         or event == "SKILL_LINES_CHANGED" or event == "SPELLS_CHANGED"
         or event == "PLAYER_ALIVE"
         or (event == "UNIT_LEVEL" and ... == "player") then

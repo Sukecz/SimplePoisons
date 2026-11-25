@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Reduce SimplePoisons' overhead during Auctionator full scans. Item data events refresh weapon buttons only when a supported poison, stone, or equipped weapon finishes loading. Events received together share one refresh.
+
 ## 0.4.0
 
 - Enable an optional spoken reminder when poison runs low on time or charges. Set its volume from 0% to 300% and use **Play** to hear the selected level.

@@ -183,12 +183,10 @@ function PoisonData:GetRepresentativeIcon(key, enchantID)
     return (itemID and ns.ApiCompat:GetItemIcon(itemID)) or "Interface\\Icons\\Ability_Poisons"
 end
 
-function PoisonData:RequestItemData()
+function PoisonData:ForEachItemID(visit)
     for _, key in ipairs(self.order) do
-        if self:IsAvailableFamily(key) then
-            for _, itemID in ipairs(self:GetItemIDs(key)) do
-                ns.ApiCompat:RequestItemData(itemID)
-            end
+        for _, itemID in ipairs(self:GetItemIDs(key)) do
+            visit(itemID)
         end
     end
 end

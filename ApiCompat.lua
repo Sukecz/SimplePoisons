@@ -200,6 +200,12 @@ function ApiCompat:GetWeaponTexture(slotID)
     return nil
 end
 
+function ApiCompat:IsEquippedWeapon(itemID)
+    if type(GetInventoryItemID) ~= "function" then return false end
+    return itemID == GetInventoryItemID("player", ns.Constants.MAIN_HAND_SLOT)
+        or itemID == GetInventoryItemID("player", ns.Constants.OFF_HAND_SLOT)
+end
+
 function ApiCompat:GetWeaponStoneKind(slotID)
     local itemID = type(GetInventoryItemID) == "function" and GetInventoryItemID("player", slotID)
     if not itemID then return nil end

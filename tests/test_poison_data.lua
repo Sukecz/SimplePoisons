@@ -1,6 +1,7 @@
 local ns = {}
 local counts = { [8927] = 3, [8928] = 2, [3775] = 4 }
-local requested = {}
+local visited = {}
+local function visit(itemID) visited[itemID] = true end
 
 ns.L = { NONE = "None" }
 ns.ApiCompat = {
@@ -8,7 +9,6 @@ ns.ApiCompat = {
     GetItemName = function() return nil end,
     GetItemCount = function(_, itemID) return counts[itemID] or 0 end,
     GetItemIcon = function(_, itemID) return "icon:" .. itemID end,
-    RequestItemData = function(_, itemID) requested[itemID] = true end,
     IsTBC = function() return ns.isTBC end,
 }
 
@@ -25,8 +25,8 @@ assert(ns.PoisonData:GetFamilyByEnchantID(2640) == nil)
 assert(ns.PoisonData:GetFamilyByEnchantID(999999) == nil)
 assert(#ns.PoisonData:GetOptions() == 5)
 assert(not ns.PoisonData:IsAvailableFamily("anesthetic"))
-ns.PoisonData:RequestItemData()
-assert(not requested[21835] and not requested[21927] and not requested[22055])
+ns.PoisonData:ForEachItemID(visit)
+assert(not visited[21835] and not visited[21927] and not visited[22055])
 ns.isTBC = true
 assert(ns.PoisonData:IsAvailableFamily("anesthetic") == true)
 assert(ns.PoisonData:GetFamilyByEnchantID(2640) == "anesthetic")
@@ -35,12 +35,12 @@ assert(ns.PoisonData:GetFamilyByEnchantID(2642) == "deadly")
 assert(ns.PoisonData:GetFamilyByEnchantID(2643) == "deadly")
 assert(ns.PoisonData:GetFamilyByEnchantID(2644) == "wound")
 assert(#ns.PoisonData:GetOptions() == 6)
-ns.PoisonData:RequestItemData()
-assert(requested[6947] and requested[8928] and requested[21927])
-assert(requested[20844] and requested[22053] and requested[22054])
-assert(requested[10922] and requested[22055] and requested[21835])
-assert(requested[9186])
-assert(not requested[9187])
+ns.PoisonData:ForEachItemID(visit)
+assert(visited[6947] and visited[8928] and visited[21927])
+assert(visited[20844] and visited[22053] and visited[22054])
+assert(visited[10922] and visited[22055] and visited[21835])
+assert(visited[9186])
+assert(not visited[9187])
 
 -- Complete catalog fixtures, cross-checked against each client's item effects.
 local expected = {
